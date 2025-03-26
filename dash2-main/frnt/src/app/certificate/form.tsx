@@ -65,11 +65,56 @@ export default function GenerateCertificate() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const [startDate, setStartDate] = useState<string>("");
+  const [endDate, setEndDate] = useState<string>("");
+  const [timePeriod, setTimePeriod] = useState<number | null>(null);
+
   const handleStartDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setStartDate(e.target.value);
+    const newStartDate = e.target.value;
+    setStartDate(newStartDate);
+    setFormData(prev => ({
+      ...prev,
+      dateOfCalibration: new Date(newStartDate)
+    }));
+
     if (timePeriod) {
-      updateEndDate(e.target.value, timePeriod);
+      const startDateObj = new Date(newStartDate);
+      startDateObj.setMonth(startDateObj.getMonth() + timePeriod);
+      const newEndDate = startDateObj.toISOString().split("T")[0];
+      setEndDate(newEndDate);
+      setFormData(prev => ({
+        ...prev,
+        dateOfCalibration: new Date(newStartDate),
+        calibrationDueDate: startDateObj
+      }));
     }
+  };
+
+  const handleTimePeriodChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const period = Number(e.target.value);
+    setTimePeriod(period);
+    
+    if (startDate) {
+      const startDateObj = new Date(startDate);
+      startDateObj.setMonth(startDateObj.getMonth() + period);
+      const newEndDate = startDateObj.toISOString().split("T")[0];
+      setEndDate(newEndDate);
+      setFormData(prev => ({
+        ...prev,
+        calibrationDueDate: startDateObj
+      }));
+    }
+  };
+
+  const updateEndDate = (start: string, months: number) => {
+    const startDateObj = new Date(start);
+    startDateObj.setMonth(startDateObj.getMonth() + months);
+    const newEndDate = startDateObj.toISOString().split("T")[0];
+    setEndDate(newEndDate);
+    setFormData(prev => ({
+      ...prev,
+      calibrationDueDate: startDateObj
+    }));
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>) => {
@@ -167,34 +212,29 @@ export default function GenerateCertificate() {
     setLoading(true);
     setError(null);
 
+    console.log('Form data before submission:', formData);
+
     try {
+      // Ensure dates are properly formatted
+      const submissionData = {
+        ...formData,
+        dateOfCalibration: startDate ? new Date(startDate) : null,
+        calibrationDueDate: endDate ? new Date(endDate) : null
+      };
+
+      console.log('Submitting data:', submissionData);
+
       const response = await axios.post(
         "http://localhost:5000/api/v1/certificates/generateCertificate",
-        formData
+        submissionData
       );
       setCertificate(response.data);
     } catch (err: any) {
+      console.error('Error submitting form:', err);
       setError(err.response?.data?.error || "Failed to generate certificate. Please try again.");
     } finally {
       setLoading(false);
     }
-  };
-  const [startDate, setStartDate] = useState<string>("");
-  const [endDate, setEndDate] = useState<string>("");
-  const [timePeriod, setTimePeriod] = useState<number | null>(null);
-
-  const handleTimePeriodChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const period = Number(e.target.value);
-    setTimePeriod(period);
-    if (startDate) {
-      updateEndDate(startDate, period);
-    }
-  };
-
-  const updateEndDate = (start: string, months: number) => {
-    const startDateObj = new Date(start);
-    startDateObj.setMonth(startDateObj.getMonth() + months);
-    setEndDate(startDateObj.toISOString().split("T")[0]); // Format as YYYY-MM-DD
   };
 
   const handleDownload = async () => {
@@ -334,9 +374,15 @@ export default function GenerateCertificate() {
             name="calibrationDueDate"
             placeholder="Enter Calibration Due Date"
             value={endDate}
-            onChange={handleStartDateChange}
+            onChange={(e) => {
+              setEndDate(e.target.value);
+              setFormData(prev => ({
+                ...prev,
+                calibrationDueDate: new Date(e.target.value)
+              }));
+            }}
             className="p-2 border rounded"
-            disabled
+            disabled={timePeriod !== null}
           />
           <select
             name="engineerName"

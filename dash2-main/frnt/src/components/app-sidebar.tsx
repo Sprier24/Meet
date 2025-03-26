@@ -46,8 +46,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         icon: CirclePlay,
         items: [
           {
-            title: "Data",
-            url: "/dashboard",
+            title: "Certificate Table",
+            url: "/certificateTable",
+          },
+          {
+            title: "Service",
+            url: "/service",
           },
         ],
       },
