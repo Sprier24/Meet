@@ -93,7 +93,7 @@ export default function GenerateCertificate() {
   const handleTimePeriodChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const period = Number(e.target.value);
     setTimePeriod(period);
-    
+
     if (startDate) {
       const startDateObj = new Date(startDate);
       startDateObj.setMonth(startDateObj.getMonth() + period);
@@ -117,7 +117,7 @@ export default function GenerateCertificate() {
     }));
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLSelectElement | HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
 
     const updatedValue = e.target.type === "date"
@@ -177,13 +177,19 @@ export default function GenerateCertificate() {
         default:
           updatedObservations = [{ gas: "", before: "", after: "" }];
       }
-    }
 
-    setFormData(prev => ({
-      ...prev,
-      [name]: updatedValue,
-      ...(name === "makeModel" && { range: updatedRange, observations: updatedObservations })
-    }));
+      setFormData(prev => ({
+        ...prev,
+        makeModel: value,
+        range: updatedRange,
+        observations: updatedObservations
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: updatedValue
+      }));
+    }
   };
 
   const handleObservationChange = (index: number, field: keyof Observation, value: string) => {
@@ -355,7 +361,9 @@ export default function GenerateCertificate() {
             value={startDate}
             onChange={handleStartDateChange}
             className="p-2 border rounded"
-
+            data-date-format="DD-MM-YYYY"
+            min="2000-01-01"
+            max="2100-12-31"
           />
           <select
             onChange={handleTimePeriodChange}
@@ -383,6 +391,9 @@ export default function GenerateCertificate() {
             }}
             className="p-2 border rounded"
             disabled={timePeriod !== null}
+            data-date-format="DD-MM-YYYY"
+            min="2000-01-01"
+            max="2100-12-31"
           />
           <select
             name="engineerName"

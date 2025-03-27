@@ -19,19 +19,9 @@ const data = {
   teams: [
     {
       name: "Spriers",
-      logo: GalleryVerticalEnd,
+      logoUrl: "/img/karmen-loh.jpg",
       plan: "Enterprise",
-    },
-    {
-      name: "OSCorp",
-      logo: AudioWaveform,
-      plan: "Startup",
-    },
-    {
-      name: "Evil Corp",
-      logo: Command,
-      plan: "Free",
-    },
+    }
   ],
 }
 
@@ -104,4 +94,3 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     </Sidebar>
   )
 }
-

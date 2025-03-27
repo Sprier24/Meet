@@ -1,187 +1,157 @@
-"use client"
+"use client";
+import React, { useEffect, useState } from "react"
+import { Button } from "@/components/ui/button"
+import { CalendarIcon, Edit, Trash2, Loader2, PlusCircle, SearchIcon, ChevronDownIcon, Printer, FileDown } from "lucide-react"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { toast } from "@/hooks/use-toast"
+import { z } from "zod"
+import { cn } from "@/lib/utils"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
+import { Table, TableBody, TableCell, TableColumn, TableHeader, TableRow, Selection } from "@heroui/react"
+import axios from "axios";
+import { format } from "date-fns"
+import { Chip, Dropdown, DropdownItem, DropdownMenu, DropdownTrigger, Pagination, Tooltip, User } from "@heroui/react"
+// import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useRouter } from "next/navigation";
+import { Calendar } from "@/components/ui/calendar"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
-import React, {SVGProps, useEffect, useState} from "react";
-import {
-  Table,
-  TableHeader,
-  TableColumn,
-  TableBody,
-  TableRow,
-  TableCell,
-  Input,
-  Button,
-  DropdownTrigger,
-  Dropdown,
-  DropdownMenu,
-  DropdownItem,
-  Chip,
-  User,
-  Pagination,
-  Selection,
-  ChipProps,
-  SortDescriptor,
-} from "@heroui/react";
+interface Certificate {
+  _id: string;
+  certificateNo: string;
+  customerName: string;
+  siteLocation: string;
+  makeModel: string;
+  range: string;
+  serialNo: string;
+  calibrationGas: string;
+  gasCanisterDetails: string;
+  dateOfCalibration: string;
+  calibrationDueDate: string;
+  engineerName: string;
+  [key: string]: string;
+}
 
-export type IconSvgProps = SVGProps<SVGSVGElement> & {
-  size?: number;
+type SortDescriptor = {
+  column: string;
+  direction: 'ascending' | 'descending';
+}
+
+interface CertificateResponse {
+  certificateId: string;
+  message: string;
+  downloadUrl: string;
+}
+
+const generateUniqueId = () => {
+  return Math.random().toString(36).substring(2) + Date.now().toString(36);
 };
 
-export const columns = [
-  {name: "ID", uid: "id", sortable: true},
-  {name: "NAME", uid: "name", sortable: true},
-  {name: "AGE", uid: "age", sortable: true},
-  {name: "ROLE", uid: "role", sortable: true},
-  {name: "TEAM", uid: "team"},
-  {name: "EMAIL", uid: "email"},
-  {name: "STATUS", uid: "status", sortable: true},
-  {name: "ACTIONS", uid: "actions"},
+const formatDate = (dateString: string): string => {
+  const date = new Date(dateString);
+  return date.toISOString().split("T")[0]; // Returns "YYYY-MM-DD"
+};
+
+const columns = [
+  { name: "CERTIFICATE NO", uid: "certificateNo", sortable: true, width: "120px" },
+  { name: "CUSTOMER", uid: "customerName", sortable: true, width: "120px" },
+  { name: "SITE LOCATION", uid: "siteLocation", sortable: true, width: "120px" },
+  { name: "MAKE MODEL", uid: "makeModel", sortable: true, width: "120px" },
+  // { name: "RANGE", uid: "range", sortable: true, width: "120px" },
+  { name: "SERIAL NO", uid: "serialNo", sortable: true, width: "120px" },
+  // { name: "CALIBRATION GAS", uid: "calibrationGas", sortable: true, width: "120px" },
+  // { name: "GAS CANISTER DETAILS", uid: "gasCanisterDetails", sortable: true, width: "120px" },
+  // { name: "DATE OF CALIBRATION", uid: "dateOfCalibration", sortable: true, width: "120px" },
+  // { name: "CALIBRATION DUE DATE", uid: "calibrationDueDate", sortable: true, width: "120px" },
+  { name: "ENGINEER NAME", uid: "engineerName", sortable: true, width: "120px" },
+
+  { name: "ACTION", uid: "actions", sortable: true, width: "100px" },
 ];
+const INITIAL_VISIBLE_COLUMNS = ["certificateNo", "customerName", "siteLocation", "makeModel", "range", "serialNo", "calibrationGas", "gasCanisterDetails", "dateOfCalibration", "calibrationDueDate", "engineerName", "actions"];
 
-export const statusOptions = [
-  {name: "Active", uid: "active"},
-  {name: "Paused", uid: "paused"},
-  {name: "Vacation", uid: "vacation"},
-];
 
-export const VerticalDotsIcon = ({size = 24, width, height, ...props}: IconSvgProps) => {
-  return (
-    <svg
-      aria-hidden="true"
-      fill="none"
-      focusable="false"
-      height={size || height}
-      role="presentation"
-      viewBox="0 0 24 24"
-      width={size || width}
-      {...props}
-    >
-      <path
-        d="M12 10c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0-6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 12c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"
-        fill="currentColor"
-      />
-    </svg>
-  );
-};
-
-export const SearchIcon = (props: IconSvgProps) => {
-  return (
-    <svg
-      aria-hidden="true"
-      fill="none"
-      focusable="false"
-      height="1em"
-      role="presentation"
-      viewBox="0 0 24 24"
-      width="1em"
-      {...props}
-    >
-      <path
-        d="M11.5 21C16.7467 21 21 16.7467 21 11.5C21 6.25329 16.7467 2 11.5 2C6.25329 2 2 6.25329 2 11.5C2 16.7467 6.25329 21 11.5 21Z"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth="2"
-      />
-      <path
-        d="M22 22L20 20"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth="2"
-      />
-    </svg>
-  );
-};
-
-export const ChevronDownIcon = ({strokeWidth = 1.5, ...otherProps}: IconSvgProps) => {
-  return (
-    <svg
-      aria-hidden="true"
-      fill="none"
-      focusable="false"
-      height="1em"
-      role="presentation"
-      viewBox="0 0 24 24"
-      width="1em"
-      {...otherProps}
-    >
-      <path
-        d="m19.92 8.95-6.52 6.52c-.77.77-2.03.77-2.8 0L4.08 8.95"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeMiterlimit={10}
-        strokeWidth={strokeWidth}
-      />
-    </svg>
-  );
-};
-
-const statusColorMap: Record<string, ChipProps["color"]> = {
-  active: "success",
-  paused: "danger",
-  vacation: "warning",
-};
-
-const INITIAL_VISIBLE_COLUMNS = ["name", "role", "status", "actions"];
-
-type User = {
-  _id?: string;
-  id?: number;
-  certificateNo: String,
-  customerName: String,
-  siteLocation: String,
-  makeModel: String,
-  range: String,
-  serialNo: String,
-  calibrationGas: String,
-  gasCanisterDetails: String,
-  dateOfCalibration: Date,
-  calibrationDueDate: Date,
-  engineerName: String
-};
-
-export default function App() {
-  const [filterValue, setFilterValue] = React.useState("");
-  const [selectedKeys, setSelectedKeys] = React.useState<Selection>(new Set([]));
-  const [visibleColumns, setVisibleColumns] = React.useState<Selection>(
-    new Set(INITIAL_VISIBLE_COLUMNS),
-  );
+export default function CertificateTable() {
+  const [certificates, setCertificates] = useState<Certificate[]>([]);
+  const [certificate, setCertificate] = useState<CertificateResponse | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedKeys, setSelectedKeys] = React.useState<Set<string>>(new Set([]));
+  const [visibleColumns, setVisibleColumns] = React.useState<Selection>(new Set(columns.map(column => column.uid)));
   const [statusFilter, setStatusFilter] = React.useState<Selection>("all");
-  const [rowsPerPage, setRowsPerPage] = React.useState(5);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
   const [sortDescriptor, setSortDescriptor] = React.useState<SortDescriptor>({
-    column: "age",
+    column: "certificateNo",
     direction: "ascending",
   });
   const [page, setPage] = React.useState(1);
-  const [data, setData] = React.useState<User[]>([]);
-  const [loading, setLoading] = React.useState(true);
-  const [error, setError] = React.useState<string | null>(null);
+  const router = useRouter();
+
+  const [isDownloading, setIsDownloading] = useState<string | null>(null);
+
+  const fetchCertificates = async () => {
+    try {
+      const response = await axios.get(
+        "http://localhost:5000/api/v1/certificates/getCertificate",
+        {
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${localStorage.getItem("token")}`
+          }
+        }
+      );
+
+      // Log the response structure
+      console.log('Full API Response:', {
+        status: response.status,
+        data: response.data,
+        type: typeof response.data,
+        hasData: 'data' in response.data
+      });
+
+      // Handle the response based on its structure
+      let certificatesData;
+      if (typeof response.data === 'object' && 'data' in response.data) {
+        // Response format: { data: [...certificates] }
+        certificatesData = response.data.data;
+      } else if (Array.isArray(response.data)) {
+        // Response format: [...certificates]
+        certificatesData = response.data;
+      } else {
+        console.error('Unexpected response format:', response.data);
+        throw new Error('Invalid response format');
+      }
+
+      // Ensure certificatesData is an array
+      if (!Array.isArray(certificatesData)) {
+        certificatesData = [];
+      }
+
+      // Map the data with safe key generation
+      const certificatesWithKeys = certificatesData.map((certificate: Certificate) => ({
+        ...certificate,
+        key: certificate._id || generateUniqueId()
+      }));
+
+      setCertificates(certificatesWithKeys);
+      setError(null); // Clear any previous errors
+    } catch (error) {
+      console.error("Error fetching leads:", error);
+      if (axios.isAxiosError(error)) {
+        setError(`Failed to fetch leads: ${error.response?.data?.message || error.message}`);
+      } else {
+        setError("Failed to fetch leads.");
+      }
+      setCertificates([]); // Set empty array on error
+    }
+  };
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch('http://localhost:5000/api/v1/certificates/getCertificate');
-        if (!response.ok) {
-          throw new Error('Failed to fetch data');
-        }
-        const result = await response.json();
-        const certificateData = Array.isArray(result.data) ? result.data : result.data ? [result.data] : [];
-        setData(certificateData);
-        setError(null);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'An error occurred');
-        console.error('Error fetching data:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
+    fetchCertificates();
   }, []);
 
-  const pages = Math.ceil(data.length / rowsPerPage);
+  const [filterValue, setFilterValue] = useState("");
   const hasSearchFilter = Boolean(filterValue);
 
   const headerColumns = React.useMemo(() => {
@@ -191,21 +161,19 @@ export default function App() {
   }, [visibleColumns]);
 
   const filteredItems = React.useMemo(() => {
-    let filteredUsers = [...data];
+    let filteredCertificates = [...certificates];
 
     if (hasSearchFilter) {
-      filteredUsers = filteredUsers.filter((user) =>
-        user.customerName.toLowerCase().includes(filterValue.toLowerCase()),
+      filteredCertificates = filteredCertificates.filter((certificate) =>
+        certificate.certificateNo.toLowerCase().includes(filterValue.toLowerCase()) ||
+        certificate.customerName.toLowerCase().includes(filterValue.toLowerCase())
       );
     }
-    // if (statusFilter !== "all" && Array.from(statusFilter).length !== statusOptions.length) {
-    //   filteredUsers = filteredUsers.filter((user) =>
-    //     Array.from(statusFilter).includes(user.engineerName),
-    //   );
-    // }
 
-    return filteredUsers;
-  }, [data, filterValue, statusFilter]);
+    return filteredCertificates;
+  }, [certificates, hasSearchFilter, filterValue]);
+
+  const pages = Math.ceil(filteredItems.length / rowsPerPage);
 
   const items = React.useMemo(() => {
     const start = (page - 1) * rowsPerPage;
@@ -215,77 +183,106 @@ export default function App() {
   }, [page, filteredItems, rowsPerPage]);
 
   const sortedItems = React.useMemo(() => {
-    return [...items].sort((a: User, b: User) => {
-      const first = a[sortDescriptor.column as keyof User];
-      const second = b[sortDescriptor.column as keyof User];
-      const cmp = first && second ? (first < second ? -1 : first > second ? 1 : 0) : 0;
+    return [...items].sort((a, b) => {
+      const first = a[sortDescriptor.column as keyof Certificate];
+      const second = b[sortDescriptor.column as keyof Certificate];
+      const cmp = first < second ? -1 : first > second ? 1 : 0;
 
       return sortDescriptor.direction === "descending" ? -cmp : cmp;
     });
   }, [sortDescriptor, items]);
 
-  const renderCell = React.useCallback((user: User, columnKey: React.Key) => {
-    const cellValue = user[columnKey as keyof User];
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [selectedCertificate, setSelectedCertificate] = useState<Certificate | null>(null);
 
-    switch (columnKey) {
-      case "name":
-        return (
-          <User
-            classNames={{
-              description: "text-default-500",
-            }}
-            description={user.engineerName}
-            name={user.engineerName as string}
-          >
-            {user.engineerName}
-          </User>
-        );
-      case "role":
-        return (
-          <div className="flex flex-col">
-            <p className="text-bold text-small capitalize">{user.engineerName}</p>
-            <p className="text-bold text-tiny capitalize text-default-500">{user.engineerName}</p>
-          </div>
-        );
-      case "status":
-        return (
-          <Chip
-            className="capitalize border-none gap-1 text-default-600"
-            color={statusColorMap[user.engineerName as string]}
-            size="sm"
-            variant="dot"
-          >
-            {user.engineerName}
-          </Chip>
-        );
-      case "actions":
-        return (
-          <div className="relative flex justify-end items-center gap-2">
-            <Dropdown className="bg-background border-1 border-default-200">
-              <DropdownTrigger>
-                <Button isIconOnly radius="full" size="sm" variant="light">
-                  <VerticalDotsIcon className="text-default-400" />
-                </Button>
-              </DropdownTrigger>
-              <DropdownMenu>
-                <DropdownItem key="view">View</DropdownItem>
-                <DropdownItem key="edit">Edit</DropdownItem>
-                <DropdownItem key="delete">Delete</DropdownItem>
-              </DropdownMenu>
-            </Dropdown>
-          </div>
-        );
-      default:
-        return cellValue;
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const handleDownload = async (certificateId: string) => {
+    try {
+      setIsDownloading(certificateId);
+      console.log('Attempting to download certificate:', certificateId);
+      
+      // Now download the PDF directly
+      const pdfResponse = await axios.get(
+        `http://localhost:5000/api/v1/certificates/download/${certificateId}`,
+        { 
+          responseType: 'blob',
+          headers: {
+            "Authorization": `Bearer ${localStorage.getItem("token")}`,
+            "Accept": "application/pdf"
+          }
+        }
+      );
+
+      // Verify the content type
+      const contentType = pdfResponse.headers['content-type'];
+      if (!contentType || !contentType.includes('application/pdf')) {
+        throw new Error('Received invalid content type from server');
+      }
+
+      const blob = new Blob([pdfResponse.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `certificate-${certificateId}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+
+      toast({
+        title: "Success",
+        description: "Certificate downloaded successfully",
+        variant: "default",
+      });
+    } catch (err) {
+      console.error('Download error:', err);
+      let errorMessage = "Failed to download certificate. Please try again.";
+      
+      if (axios.isAxiosError(err)) {
+        console.error('Error details:', {
+          status: err.response?.status,
+          data: err.response?.data,
+          url: err.config?.url
+        });
+        
+        if (err.response?.status === 401) {
+          errorMessage = "Please login again to download the certificate.";
+        } else if (err.response?.status === 404) {
+          errorMessage = "Certificate not found.";
+        } else if (!navigator.onLine) {
+          errorMessage = "No internet connection. Please check your network.";
+        }
+      }
+      
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setIsDownloading(null);
     }
-  }, []);
+  };
+
+  const onNextPage = React.useCallback(() => {
+    if (page < pages) {
+      setPage(page + 1);
+    }
+  }, [page, pages]);
+
+  const onPreviousPage = React.useCallback(() => {
+    if (page > 1) {
+      setPage(page - 1);
+    }
+  }, [page]);
 
   const onRowsPerPageChange = React.useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
     setRowsPerPage(Number(e.target.value));
     setPage(1);
   }, []);
 
-  const onSearchChange = React.useCallback((value?: string) => {
+  const onSearchChange = React.useCallback((value: string) => {
     if (value) {
       setFilterValue(value);
       setPage(1);
@@ -294,83 +291,33 @@ export default function App() {
     }
   }, []);
 
+  const onClear = React.useCallback(() => {
+    setFilterValue("");
+    setPage(1);
+  }, []);
+
   const topContent = React.useMemo(() => {
     return (
       <div className="flex flex-col gap-4">
         <div className="flex justify-between gap-3 items-end">
           <Input
             isClearable
-            classNames={{
-              base: "w-full sm:max-w-[44%]",
-              inputWrapper: "border-1",
-            }}
+            className="w-full sm:max-w-[80%]" // Full width on small screens, 44% on larger screens
             placeholder="Search by name..."
-            size="sm"
-            startContent={<SearchIcon className="text-default-300" />}
+            startContent={<SearchIcon className="h-4 w-10 text-muted-foreground" />}
             value={filterValue}
-            variant="bordered"
+            onChange={(e) => setFilterValue(e.target.value)}
             onClear={() => setFilterValue("")}
-            onValueChange={onSearchChange}
           />
-          <div className="flex gap-3">
-            <Dropdown>
-              <DropdownTrigger className="hidden sm:flex">
-                <Button
-                  endContent={<ChevronDownIcon className="text-small" />}
-                  size="sm"
-                  variant="flat"
-                >
-                  Status
-                </Button>
-              </DropdownTrigger>
-              <DropdownMenu
-                disallowEmptySelection
-                aria-label="Table Columns"
-                closeOnSelect={false}
-                selectedKeys={statusFilter}
-                selectionMode="multiple"
-                onSelectionChange={setStatusFilter}
-              >
-                {statusOptions.map((status) => (
-                  <DropdownItem key={status.uid} className="capitalize">
-                    {status.name}
-                  </DropdownItem>
-                ))}
-              </DropdownMenu>
-            </Dropdown>
-            <Dropdown>
-              <DropdownTrigger className="hidden sm:flex">
-                <Button
-                  endContent={<ChevronDownIcon className="text-small" />}
-                  size="sm"
-                  variant="flat"
-                >
-                  Columns
-                </Button>
-              </DropdownTrigger>
-              <DropdownMenu
-                disallowEmptySelection
-                aria-label="Table Columns"
-                closeOnSelect={false}
-                selectedKeys={visibleColumns}
-                selectionMode="multiple"
-                onSelectionChange={setVisibleColumns}
-              >
-                {columns.map((column) => (
-                  <DropdownItem key={column.uid} className="capitalize">
-                    {column.name}
-                  </DropdownItem>
-                ))}
-              </DropdownMenu>
-            </Dropdown>
-          </div>
+
+
         </div>
         <div className="flex justify-between items-center">
-          <span className="text-default-400 text-small">Total {data.length} users</span>
+          <span className="text-default-400 text-small">Total {certificates.length} certificates</span>
           <label className="flex items-center text-default-400 text-small">
             Rows per page:
             <select
-              className="bg-transparent outline-none text-default-400 text-small"
+              className="bg-transparent dark:bg-gray-800 outline-none text-default-400 text-small"
               onChange={onRowsPerPageChange}
             >
               <option value="5">5</option>
@@ -385,102 +332,143 @@ export default function App() {
     filterValue,
     statusFilter,
     visibleColumns,
-    onSearchChange,
     onRowsPerPageChange,
-    data.length,
-    hasSearchFilter,
+    certificates.length,
+    onSearchChange,
   ]);
 
   const bottomContent = React.useMemo(() => {
     return (
       <div className="py-2 px-2 flex justify-between items-center">
+        <span className="w-[30%] text-small text-default-400">
+
+        </span>
         <Pagination
-          showControls
-          classNames={{
-            cursor: "bg-foreground text-background",
-          }}
-          color="default"
-          isDisabled={hasSearchFilter}
+          isCompact
+          // showControls
+          showShadow
+          color="success"
           page={page}
           total={pages}
-          variant="light"
           onChange={setPage}
+          classNames={{
+            // base: "gap-2 rounded-2xl shadow-lg p-2 dark:bg-default-100",
+            cursor: "bg-[hsl(339.92deg_91.04%_52.35%)] shadow-md",
+            item: "data-[active=true]:bg-[hsl(339.92deg_91.04%_52.35%)] data-[active=true]:text-white rounded-lg",
+          }}
         />
-        <span className="text-small text-default-400">
-          {selectedKeys === "all"
-            ? "All items selected"
-            : `${selectedKeys.size} of ${items.length} selected`}
-        </span>
+
+        <div className="rounded-lg bg-default-100 hover:bg-default-200 hidden sm:flex w-[30%] justify-end gap-2">
+          <Button
+            className="bg-[hsl(339.92deg_91.04%_52.35%)]"
+            variant="default"
+            size="sm"
+            disabled={pages === 1} // Use the `disabled` prop
+            onClick={onPreviousPage}
+          >
+            Previous
+          </Button>
+          <Button
+            className="bg-[hsl(339.92deg_91.04%_52.35%)]"
+            variant="default"
+            size="sm"
+            onClick={onNextPage} // Use `onClick` instead of `onPress`
+          >
+            Next
+          </Button>
+
+        </div>
       </div>
     );
   }, [selectedKeys, items.length, page, pages, hasSearchFilter]);
 
-  const classNames = React.useMemo(
-    () => ({
-      wrapper: ["max-h-[382px]", "max-w-3xl"],
-      th: ["bg-transparent", "text-default-500", "border-b", "border-divider"],
-      td: [
-        // changing the rows border radius
-        // first
-        "group-data-[first=true]/tr:first:before:rounded-none",
-        "group-data-[first=true]/tr:last:before:rounded-none",
-        // middle
-        "group-data-[middle=true]/tr:before:rounded-none",
-        // last
-        "group-data-[last=true]/tr:first:before:rounded-none",
-        "group-data-[last=true]/tr:last:before:rounded-none",
-      ],
-    }),
-    [],
-  );
+  const handleSelectionChange = (keys: Selection) => {
+    if (keys === "all") {
+      setSelectedKeys(new Set(certificates.map(cert => cert._id)));
+    } else {
+      setSelectedKeys(keys as Set<string>);
+    }
+  };
+
+  const handleVisibleColumnsChange = (keys: Selection) => {
+    setVisibleColumns(keys);
+  };
+
+  const renderCell = React.useCallback((certificate: Certificate, columnKey: string): React.ReactNode => {
+    const cellValue = certificate[columnKey];
+
+    if ((columnKey === "dateOfCalibration" || columnKey === "calibrationDueDate") && cellValue) {
+      return formatDate(cellValue);
+    }
+
+    if (columnKey === "actions") {
+      return (
+        <div className="relative flex items-center gap-2">
+          <Tooltip color="danger" content="Download Certificate">
+            <span 
+              className="text-lg text-danger cursor-pointer active:opacity-50"
+              onClick={(e) => {
+                e.preventDefault();
+                handleDownload(certificate.certificateId);
+              }}
+            >
+              {isDownloading === certificate.certificateId ? (
+                <Loader2 className="h-6 w-6 animate-spin" />
+              ) : (
+                <FileDown className="h-6 w-6" />
+              )}
+            </span>
+          </Tooltip>
+        </div>
+      );
+    }
+
+    return cellValue;
+  }, []);
 
   return (
-    <Table
-      isCompact
-      removeWrapper
-      aria-label="Certificate table with data from backend"
-      bottomContent={bottomContent}
-      bottomContentPlacement="outside"
-      checkboxesProps={{
-        classNames: {
-          wrapper: "after:bg-foreground after:text-background text-background",
-        },
-      }}
-      classNames={classNames}
-      selectedKeys={selectedKeys}
-      selectionMode="multiple"
-      sortDescriptor={sortDescriptor}
-      topContent={topContent}
-      topContentPlacement="outside"
-      onSelectionChange={setSelectedKeys}
-      onSortChange={setSortDescriptor}
-    >
-      <TableHeader columns={headerColumns}>
-        {(column) => (
-          <TableColumn
-            key={column.uid}
-            align={column.uid === "actions" ? "center" : "start"}
-            allowsSorting={column.sortable}
-          >
-            {column.name}
-          </TableColumn>
-        )}
-      </TableHeader>
-      <TableBody 
-        emptyContent={loading ? "Loading..." : error || "No certificates found"} 
-        items={sortedItems}
-        isLoading={loading}
+    <div className="container mx-auto py-10 px-4 sm:px-6 lg:px-8 pt-15 max-w-screen-xl">
+      <Table
+        isHeaderSticky
+        aria-label="Leads table with custom cells, pagination and sorting"
+        bottomContent={bottomContent}
+        bottomContentPlacement="outside"
+        classNames={{
+          wrapper: "max-h-[382px] ower-flow-y-auto",
+        }}
+        selectedKeys={selectedKeys}
+        sortDescriptor={sortDescriptor}
+        topContent={topContent}
+        topContentPlacement="outside"
+        onSelectionChange={handleSelectionChange}
+        onSortChange={(descriptor) => {
+          setSortDescriptor({
+            column: descriptor.column as string,
+            direction: descriptor.direction as "ascending" | "descending",
+          });
+        }}
       >
-        {(item) => (
-          <TableRow key={item._id || item.id || `row-${item.email}`}>
-            {(columnKey) => (
-              <TableCell key={`${item._id || item.id || item.email}-${columnKey}`}>
-                {renderCell(item, columnKey)}
-              </TableCell>
-            )}
-          </TableRow>
-        )}
-      </TableBody>
-    </Table>
+        <TableHeader columns={headerColumns}>
+          {(column) => (
+            <TableColumn
+              key={column.uid}
+              align={column.uid === "actions" ? "center" : "start"}
+              allowsSorting={column.sortable}
+            >
+              {column.name}
+            </TableColumn>
+          )}
+        </TableHeader>
+        <TableBody emptyContent={"No certificate found"} items={sortedItems}>
+          {(item) => (
+            <TableRow key={item._id}>
+              {(columnKey) => <TableCell style={{ fontSize: "12px", padding: "8px" }}>{renderCell(item as Certificate, columnKey as string)}</TableCell>}
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
+
+    </div>
+
   );
 }

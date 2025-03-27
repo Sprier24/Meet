@@ -36,7 +36,7 @@ export default function CertificatePage() {
                     </div>
                 </header>
                 <div className="container mx-auto py-10 px-4 sm:px-6 lg:px-8 pt-15">
-                    <Card className="max-w-2xl mx-auto">
+                    <Card className="max-w-7xl mx-auto">
                         <CardHeader>
                             <CardTitle className="text-3xl font-bold text-center">Certificate</CardTitle>
                             <CardDescription className="text-center">

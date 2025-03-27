@@ -3,7 +3,6 @@
 import { useState } from "react";
 import axios from "axios";
 
-
 interface EngineerRemarks {
     serviceSpares: string;
     partNo: string;
@@ -28,7 +27,6 @@ interface ServiceRequest {
     engineerRemarks: EngineerRemarks[];
     engineerName: string;
 }
-
 
 interface ServiceResponse {
     serviceId: string;
@@ -57,19 +55,11 @@ export default function GenerateService() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    const handleChange = (e: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
-
-        const updatedValue = e.target.type === "date"
-            ? new Date(e.target.value).toISOString().split("T")[0]
-            : value;
-
-        let updatedRemarks = formData.engineerRemarks;
-
-        setFormData((prevData) => ({
-            ...prevData,
-            [name]: updatedValue,
-            engineerRemarks: updatedRemarks,
+        setFormData(prev => ({
+            ...prev,
+            [name]: value
         }));
     };
 
@@ -186,6 +176,9 @@ export default function GenerateService() {
                         value={formData.date}
                         onChange={handleChange}
                         className="p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        data-date-format="DD-MM-YYYY"
+                        min="2000-01-01"
+                        max="2100-12-31"
                     />
 
                     <input
@@ -433,4 +426,3 @@ export default function GenerateService() {
         </div>
     );
 }
-
