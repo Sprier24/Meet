@@ -32,6 +32,7 @@ interface Certificate {
   dateOfCalibration: string;
   calibrationDueDate: string;
   engineerName: string;
+  status: string;
   [key: string]: string;
 }
 
@@ -67,11 +68,15 @@ const columns = [
   // { name: "DATE OF CALIBRATION", uid: "dateOfCalibration", sortable: true, width: "120px" },
   // { name: "CALIBRATION DUE DATE", uid: "calibrationDueDate", sortable: true, width: "120px" },
   { name: "ENGINEER NAME", uid: "engineerName", sortable: true, width: "120px" },
-
+  { name: "STATUS", uid: "status", sortable: true, width: "120px" },
   { name: "ACTION", uid: "actions", sortable: true, width: "100px" },
 ];
 const INITIAL_VISIBLE_COLUMNS = ["certificateNo", "customerName", "siteLocation", "makeModel", "range", "serialNo", "calibrationGas", "gasCanisterDetails", "dateOfCalibration", "calibrationDueDate", "engineerName", "actions"];
 
+const statusOptions = [
+  { name: "Checked", uid: "Checked" },
+  { name: "Unchecked", uid: "Unchecked" },
+];
 
 export default function CertificateTable() {
   const [certificates, setCertificates] = useState<Certificate[]>([]);
@@ -79,7 +84,7 @@ export default function CertificateTable() {
   const [error, setError] = useState<string | null>(null);
   const [selectedKeys, setSelectedKeys] = React.useState<Set<string>>(new Set([]));
   const [visibleColumns, setVisibleColumns] = React.useState<Selection>(new Set(columns.map(column => column.uid)));
-  const [statusFilter, setStatusFilter] = React.useState<Selection>("all");
+  const [statusFilter, setStatusFilter] = React.useState<Selection>(new Set([]));
   const [rowsPerPage, setRowsPerPage] = useState(15);
   const [sortDescriptor, setSortDescriptor] = React.useState<SortDescriptor>({
     column: "certificateNo",
@@ -165,13 +170,19 @@ export default function CertificateTable() {
 
     if (hasSearchFilter) {
       filteredCertificates = filteredCertificates.filter((certificate) =>
-        certificate.certificateNo.toLowerCase().includes(filterValue.toLowerCase()) ||
-        certificate.customerName.toLowerCase().includes(filterValue.toLowerCase())
+        certificate.customerName.toLowerCase().includes(filterValue.toLowerCase()) ||
+        certificate.certificateNo.toLowerCase().includes(filterValue.toLowerCase())
+      );
+    }
+
+    if (statusFilter && statusFilter instanceof Set && statusFilter.size > 0) {
+      filteredCertificates = filteredCertificates.filter((certificate) =>
+        Array.from(statusFilter).includes(certificate.status)
       );
     }
 
     return filteredCertificates;
-  }, [certificates, hasSearchFilter, filterValue]);
+  }, [certificates, hasSearchFilter, filterValue, statusFilter]);
 
   const pages = Math.ceil(filteredItems.length / rowsPerPage);
 
@@ -201,11 +212,11 @@ export default function CertificateTable() {
     try {
       setIsDownloading(certificateId);
       console.log('Attempting to download certificate:', certificateId);
-      
+
       // Now download the PDF directly
       const pdfResponse = await axios.get(
         `http://localhost:5000/api/v1/certificates/download/${certificateId}`,
-        { 
+        {
           responseType: 'blob',
           headers: {
             "Authorization": `Bearer ${localStorage.getItem("token")}`,
@@ -238,14 +249,14 @@ export default function CertificateTable() {
     } catch (err) {
       console.error('Download error:', err);
       let errorMessage = "Failed to download certificate. Please try again.";
-      
+
       if (axios.isAxiosError(err)) {
         console.error('Error details:', {
           status: err.response?.status,
           data: err.response?.data,
           url: err.config?.url
         });
-        
+
         if (err.response?.status === 401) {
           errorMessage = "Please login again to download the certificate.";
         } else if (err.response?.status === 404) {
@@ -254,7 +265,7 @@ export default function CertificateTable() {
           errorMessage = "No internet connection. Please check your network.";
         }
       }
-      
+
       toast({
         title: "Error",
         description: errorMessage,
@@ -314,6 +325,28 @@ export default function CertificateTable() {
         </div>
         <div className="flex justify-between items-center">
           <span className="text-default-400 text-small">Total {certificates.length} certificates</span>
+          <Dropdown>
+            <DropdownTrigger className="hidden sm:flex">
+              <Button variant="outline" className="gap-2">
+                Status
+                <ChevronDownIcon className="text-small" />
+              </Button>
+            </DropdownTrigger>
+            <DropdownMenu
+              disallowEmptySelection
+              aria-label="Table Columns"
+              closeOnSelect={false}
+              selectedKeys={statusFilter}
+              selectionMode="multiple"
+              onSelectionChange={setStatusFilter}
+            >
+              {statusOptions.map((status) => (
+                <DropdownItem key={status.uid} className="capitalize">
+                  {status.name}
+                </DropdownItem>
+              ))}
+            </DropdownMenu>
+          </Dropdown>
           <label className="flex items-center text-default-400 text-small">
             Rows per page:
             <select
@@ -406,7 +439,7 @@ export default function CertificateTable() {
       return (
         <div className="relative flex items-center gap-2">
           <Tooltip color="danger" content="Download Certificate">
-            <span 
+            <span
               className="text-lg text-danger cursor-pointer active:opacity-50"
               onClick={(e) => {
                 e.preventDefault();

@@ -2,13 +2,14 @@
 
 import React, { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Loader2, SearchIcon, FileDown } from "lucide-react"
+import { Loader2, SearchIcon, FileDown, ChevronDownIcon } from "lucide-react"
 import { toast } from "@/hooks/use-toast"
 import { Input } from "@/components/ui/input"
-import { Table, TableBody, TableCell, TableColumn, TableHeader, TableRow, Selection, ChipProps, Select } from "@heroui/react"
+import { Table, TableBody, TableCell, TableColumn, TableHeader, TableRow, Selection as HerouiSelection, Select, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem } from "@heroui/react"
 import axios from "axios";
 import { Pagination, Tooltip } from "@heroui/react"
 import { useRouter } from "next/navigation";
+import { Selection, SelectedItems } from "@nextui-org/react";
 
 interface Service {
     _id: string;
@@ -25,6 +26,7 @@ interface Service {
     serialNumberoftheInstrumentCalibratedOK: string;
     serialNumberoftheFaultyNonWorkingInstruments: string;
     engineerName: string;
+    status: string;
 }
 
 type SortDescriptor = {
@@ -48,36 +50,39 @@ const formatDate = (dateString: string): string => {
 };
 
 const columns = [
-    { name: "NAME & LOCATION", uid: "nameAndLocation", sortable: true, width: "120px" },
+    { name: "Customer Name", uid: "customerName", sortable: true, width: "120px" },
+    { name: "Customer Location", uid: "customerLocation", sortable: true, width: "120px" },
     { name: "CONTACT PERSON", uid: "contactPerson", sortable: true, width: "120px" },
     { name: "CONTACT NUMBER", uid: "contactNumber", sortable: true, width: "120px" },
     { name: "SERVICE ENGINEER", uid: "serviceEngineer", sortable: true, width: "120px" },
     { name: "REPORT NO", uid: "reportNo", sortable: true, width: "120px" },
+    { name: "STATUS", uid: "status", sortable: true, width: "120px" },
     { name: "ACTION", uid: "actions", sortable: true, width: "100px" },
 ];
 
 export const statusOptions = [
-    { name: "Paused", uid: "paused" },
-    { name: "Vacation", uid: "vacation" },
+    { name: "Checked", uid: "Checked" },
+    { name: "Unchecked", uid: "Unchecked" },
 ];
 
-
-const statusColorMap: Record<string, ChipProps["color"]> = {
-    active: "success",
-    paused: "danger",
-    vacation: "warning",
+const statusColorMap: Record<string, any> = {
+    Unchecked: "warning",
+    Checked: "danger",
 };
 
-const INITIAL_VISIBLE_COLUMNS = ["nameAndLocation", "contactPerson", "contactNumber", "serviceEngineer", "reportNo", "actions"];
+const INITIAL_VISIBLE_COLUMNS = ["customerName", "customerLocation", "contactPerson", "contactNumber", "serviceEngineer", "status", "reportNo", "actions"];
 
+export function capitalize(s: string) {
+    return s ? s.charAt(0).toUpperCase() + s.slice(1).toLowerCase() : "";
+}
 
 export default function ServiceTable() {
     const [services, setServices] = useState<Service[]>([]);
     const [service, setService] = useState<ServiceResponse | null>(null);
     const [error, setError] = useState<string | null>(null);
-    const [selectedKeys, setSelectedKeys] = React.useState<Set<string>>(new Set([]));
+    const [selectedKeys, setSelectedKeys] = React.useState<Selection>(new Set([]));
     const [visibleColumns, setVisibleColumns] = React.useState<Selection>(new Set(columns.map(column => column.uid)));
-    const [statusFilter, setStatusFilter] = React.useState<Selection>("all");
+    const [statusFilter, setStatusFilter] = React.useState<Selection>(new Set([]));
     const [rowsPerPage, setRowsPerPage] = useState(15);
     const [sortDescriptor, setSortDescriptor] = React.useState<SortDescriptor>({
         column: "nameAndLocation",
@@ -169,8 +174,14 @@ export default function ServiceTable() {
             );
         }
 
+        if (statusFilter && statusFilter instanceof Set && statusFilter.size > 0) {
+            filteredServices = filteredServices.filter((service) =>
+                Array.from(statusFilter).includes(service.status)
+            );
+        }
+
         return filteredServices;
-    }, [services, hasSearchFilter, filterValue]);
+    }, [services, hasSearchFilter, filterValue, statusFilter]);
 
     const pages = Math.ceil(filteredItems.length / rowsPerPage);
 
@@ -312,13 +323,28 @@ export default function ServiceTable() {
                 </div>
                 <div className="flex justify-between items-center">
                     <span className="text-default-400 text-small">Total {services.length} services</span>
-                    <Select
-                        className="w-full sm:max-w-[80%]"
-                        placeholder="Status"
-                        value={statusFilter}
-                        onChange={(value) => setStatusFilter(value)}
-                        options={statusOptions}
-                    />
+                    <Dropdown>
+                        <DropdownTrigger className="hidden sm:flex">
+                            <Button variant="outline" className="gap-2">
+                                Status
+                                <ChevronDownIcon className="text-small" />
+                            </Button>
+                        </DropdownTrigger>
+                        <DropdownMenu
+                            disallowEmptySelection
+                            aria-label="Table Columns"
+                            closeOnSelect={false}
+                            selectedKeys={statusFilter}
+                            selectionMode="multiple"
+                            onSelectionChange={setStatusFilter}
+                        >
+                            {statusOptions.map((status) => (
+                                <DropdownItem key={status.uid} className="capitalize">
+                                    {capitalize(status.name)}
+                                </DropdownItem>
+                            ))}
+                        </DropdownMenu>
+                    </Dropdown>
                     <label className="flex items-center text-default-400 text-small">
                         Rows per page:
                         <select
@@ -392,7 +418,7 @@ export default function ServiceTable() {
         if (keys === "all") {
             setSelectedKeys(new Set(services.map(service => service._id)));
         } else {
-            setSelectedKeys(keys as Set<string>);
+            setSelectedKeys(keys);
         }
     };
 
@@ -403,9 +429,6 @@ export default function ServiceTable() {
     const renderCell = React.useCallback((service: Service, columnKey: string): React.ReactNode => {
         const cellValue = service[columnKey as keyof Service];
 
-        if ((columnKey === "dateOfCalibration" || columnKey === "calibrationDueDate") && cellValue) {
-            return formatDate(cellValue);
-        }
 
         if (columnKey === "actions") {
             return (
