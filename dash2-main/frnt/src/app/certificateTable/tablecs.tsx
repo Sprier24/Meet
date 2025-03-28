@@ -80,7 +80,7 @@ export default function CertificateTable() {
   const [selectedKeys, setSelectedKeys] = React.useState<Set<string>>(new Set([]));
   const [visibleColumns, setVisibleColumns] = React.useState<Selection>(new Set(columns.map(column => column.uid)));
   const [statusFilter, setStatusFilter] = React.useState<Selection>("all");
-  const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [rowsPerPage, setRowsPerPage] = useState(15);
   const [sortDescriptor, setSortDescriptor] = React.useState<SortDescriptor>({
     column: "certificateNo",
     direction: "ascending",
@@ -319,6 +319,7 @@ export default function CertificateTable() {
             <select
               className="bg-transparent dark:bg-gray-800 outline-none text-default-400 text-small"
               onChange={onRowsPerPageChange}
+              defaultValue="15"
             >
               <option value="5">5</option>
               <option value="10">10</option>
@@ -427,7 +428,7 @@ export default function CertificateTable() {
   }, []);
 
   return (
-    <div className="container mx-auto py-10 px-4 sm:px-6 lg:px-8 pt-15 max-w-screen-xl">
+    <div className="container mx-auto py-10 px-4 sm:px-6 lg:px-8 pt-15 max-h-screen-xl max-w-screen-xl">
       <Table
         isHeaderSticky
         aria-label="Leads table with custom cells, pagination and sorting"

@@ -12,7 +12,8 @@ interface EngineerRemarks {
 }
 
 interface ServiceRequest {
-    nameAndLocation: string;
+    customerName: string;
+    customerLocation: string;
     contactPerson: string;
     contactNumber: string;
     serviceEngineer: string;
@@ -26,6 +27,7 @@ interface ServiceRequest {
     serialNumberoftheFaultyNonWorkingInstruments: string;
     engineerRemarks: EngineerRemarks[];
     engineerName: string;
+    status: string;
 }
 
 interface ServiceResponse {
@@ -34,9 +36,12 @@ interface ServiceResponse {
     downloadUrl: string;
 }
 
+
+
 export default function GenerateService() {
     const [formData, setFormData] = useState<ServiceRequest>({
-        nameAndLocation: "",
+        customerName: "",
+        customerLocation: "",
         contactPerson: "",
         contactNumber: "",
         serviceEngineer: "",
@@ -50,6 +55,7 @@ export default function GenerateService() {
         serialNumberoftheFaultyNonWorkingInstruments: "",
         engineerRemarks: [{ serviceSpares: "", partNo: "", rate: "", quantity: "", poNo: "" }],
         engineerName: "",
+        status: ""
     });
     const [service, setService] = useState<ServiceResponse | null>(null);
     const [loading, setLoading] = useState(false);
@@ -131,9 +137,18 @@ export default function GenerateService() {
                 <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                     <input
                         type="text"
-                        name="nameAndLocation"
-                        placeholder="Name and Location"
-                        value={formData.nameAndLocation}
+                        name="customerName"
+                        placeholder="Customer Name "
+                        value={formData.customerName}
+                        onChange={handleChange}
+                        className="p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+
+                    <input
+                        type="text"
+                        name="customerLocation"
+                        placeholder="Customer Location "
+                        value={formData.customerLocation}
                         onChange={handleChange}
                         className="p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
@@ -147,6 +162,16 @@ export default function GenerateService() {
                         className="p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
 
+                    <select
+                        name="status"
+                        value={formData.status}
+                        onChange={handleChange}
+                        className="p-2 border rounded"
+                    >
+                        <option value="">Select Status</option>
+                        <option value="Checked">Checked</option>
+                        <option value="Unchecked">Unchecked</option>
+                    </select>
                 </div>
                 <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
 
@@ -160,14 +185,16 @@ export default function GenerateService() {
                         className="p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
 
-                    <input
-                        type="text"
+                    <select
                         name="serviceEngineer"
-                        placeholder="Service Engineer"
                         value={formData.serviceEngineer}
                         onChange={handleChange}
-                        className="p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
+                        className="p-2 border rounded"
+                    >
+                        <option value="">Select Service Engineer</option>
+                        <option value="MR. Pintu Rathod">MR. Pintu Rathod</option>
+                        <option value="MR. Vivek">MR. Vivek</option>
+                    </select>
                 </div>
                 <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                     <input

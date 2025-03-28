@@ -21,7 +21,8 @@ interface CertificateRequest {
   dateOfCalibration: Date,
   calibrationDueDate: Date,
   observations: Observation[],
-  engineerName: String
+  engineerName: String,
+  status: string
 }
 
 interface CertificateResponse {
@@ -59,7 +60,8 @@ export default function GenerateCertificate() {
     dateOfCalibration: new Date().toISOString().split('T')[0],
     calibrationDueDate: new Date().toISOString().split('T')[0],
     observations: [{ gas: "", before: "", after: "" }],
-    engineerName: ""
+    engineerName: "",
+    status: ""
   });
   const [certificate, setCertificate] = useState<CertificateResponse | null>(null);
   const [loading, setLoading] = useState(false);
@@ -404,6 +406,18 @@ export default function GenerateCertificate() {
             <option value="">Select Engineer Name</option>
             <option value="MR. Pintu Rathod">MR. Pintu Rathod</option>
             <option value="MR. Vivek">MR. Vivek</option>
+          </select>
+        </div>
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+          <select
+            name="status"
+            value={formData.status}
+            onChange={handleChange}
+            className="p-2 border rounded"
+          >
+            <option value="">Select Status</option>
+            <option value="Checked">Checked</option>
+            <option value="Unchecked">Unchecked</option>
           </select>
         </div>
 

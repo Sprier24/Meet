@@ -40,8 +40,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             url: "/certificateTable",
           },
           {
-            title: "Service",
-            url: "/service",
+            title: "Service Table",
+            url: "/serviceTable",
           },
         ],
       },

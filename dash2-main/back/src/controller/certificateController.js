@@ -59,13 +59,14 @@ const createCertificate = async (req, res) => {
             dateOfCalibration,
             calibrationDueDate,
             observations,
-            engineerName
+            engineerName,
+            status
         } = req.body;
 
         // Validate required fields
         if (!customerName || !siteLocation || !makeModel || !range || !serialNo ||
             !calibrationGas || !gasCanisterDetails || !dateOfCalibration ||
-            !calibrationDueDate || !observations || observations.length === 0 || !engineerName) {
+            !calibrationDueDate || !observations || observations.length === 0 || !engineerName || !status) {
             console.error("Missing required fields");
             return res.status(400).json({ error: "All fields and at least one observation are required" });
         }
@@ -81,7 +82,8 @@ const createCertificate = async (req, res) => {
             dateOfCalibration: new Date(dateOfCalibration),
             calibrationDueDate: new Date(calibrationDueDate),
             observations,
-            engineerName
+            engineerName,
+            status
         });
 
         console.log("Saving certificate to database...");
@@ -102,7 +104,8 @@ const createCertificate = async (req, res) => {
             calibrationDueDate,
             newCertificate.certificateId,
             observations,
-            engineerName
+            engineerName,
+            status
         );
         console.log("PDF generated successfully at:", pdfPath);
 
@@ -153,7 +156,8 @@ const downloadCertificate = async (req, res) => {
                     certificate.calibrationDueDate,
                     certificate.certificateId,  // Use certificateId from the certificate
                     certificate.observations,
-                    certificate.engineerName
+                    certificate.engineerName,
+                    certificate.status
                 );
                 console.log("PDF regenerated successfully");
             } catch (regenerateError) {
