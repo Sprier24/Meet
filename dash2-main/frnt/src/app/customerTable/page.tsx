@@ -1,5 +1,5 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import GenerateCertificate from "../certificate/form"
+import { Metadata } from "next"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
     SidebarInset,
     SidebarProvider,
@@ -9,8 +9,14 @@ import { AppSidebar } from "@/components/app-sidebar"
 import { Separator } from "@/components/ui/separator"
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb"
 import { ModeToggle } from "@/components/ModeToggle"
+import CustomerTable from "./tablecs"
 
-export default function CertificatePage() {
+export const metadata: Metadata = {
+    title: 'Certificate Table',
+    description: 'View and manage certificates',
+}
+
+export default function CustomerPage() {
     return (
         <SidebarProvider>
             <AppSidebar />
@@ -38,19 +44,14 @@ export default function CertificatePage() {
                 <div className="container mx-auto py-10 px-4 sm:px-6 lg:px-8 pt-15">
                     <Card className="max-w-7xl mx-auto">
                         <CardHeader>
-                            <CardTitle className="text-3xl font-bold text-center">Certificate</CardTitle>
-                            <CardDescription className="text-center">
-                                Please fill out the form below to generate a new Certificate.
-                            </CardDescription>
+                            <CardTitle className="text-3xl font-bold text-center">Certificate Table</CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <GenerateCertificate />
+                            <CustomerTable />
                         </CardContent>
                     </Card>
                 </div>
             </SidebarInset>
         </SidebarProvider>
-
-
     )
 }

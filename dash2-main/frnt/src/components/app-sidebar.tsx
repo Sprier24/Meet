@@ -43,6 +43,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             title: "Service Table",
             url: "/serviceTable",
           },
+          {
+            title: "Customer Table",
+            url: "/customerTable",
+          },
         ],
       },
       {
@@ -57,6 +61,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           {
             title: "Service",
             url: "/service",
+          },
+          {
+            title: "Customer",
+            url: "/customer",
           },
         ],
       },

@@ -83,7 +83,7 @@ export default function ServiceTable() {
     const [selectedKeys, setSelectedKeys] = React.useState<Selection>(new Set([]));
     const [visibleColumns, setVisibleColumns] = React.useState<Selection>(new Set(columns.map(column => column.uid)));
     const [statusFilter, setStatusFilter] = React.useState<Selection>(new Set([]));
-    const [rowsPerPage, setRowsPerPage] = useState(15);
+    const [rowsPerPage, setRowsPerPage] = useState(10);
     const [sortDescriptor, setSortDescriptor] = React.useState<SortDescriptor>({
         column: "nameAndLocation",
         direction: "ascending",

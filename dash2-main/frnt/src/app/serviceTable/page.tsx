@@ -10,7 +10,7 @@ import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbP
 import { ModeToggle } from "@/components/ModeToggle"
 import ServiceTable from "./tableces"
 
-export default function CertificatePage() {
+export default function ServiceTablePage() {
     return (
         <SidebarProvider>
             <AppSidebar/>

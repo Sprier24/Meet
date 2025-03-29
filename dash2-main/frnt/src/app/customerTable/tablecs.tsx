@@ -19,32 +19,15 @@ import { useRouter } from "next/navigation";
 import { Calendar } from "@/components/ui/calendar"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
-interface Certificate {
+interface Customer {
   _id: string;
-  certificateNo: string;
   customerName: string;
-  siteLocation: string;
-  makeModel: string;
-  range: string;
-  serialNo: string;
-  calibrationGas: string;
-  gasCanisterDetails: string;
-  dateOfCalibration: string;
-  calibrationDueDate: string;
-  engineerName: string;
-  status: string;
-  [key: string]: string;
+  Location: string;
 }
 
 type SortDescriptor = {
   column: string;
   direction: 'ascending' | 'descending';
-}
-
-interface CertificateResponse {
-  certificateId: string;
-  message: string;
-  downloadUrl: string;
 }
 
 const generateUniqueId = () => {
@@ -57,30 +40,17 @@ const formatDate = (dateString: string): string => {
 };
 
 const columns = [
-  { name: "CERTIFICATE NO", uid: "certificateNo", sortable: true, width: "120px" },
   { name: "CUSTOMER", uid: "customerName", sortable: true, width: "120px" },
-  { name: "SITE LOCATION", uid: "siteLocation", sortable: true, width: "120px" },
-  { name: "MAKE MODEL", uid: "makeModel", sortable: true, width: "120px" },
-  { name: "SERIAL NO", uid: "serialNo", sortable: true, width: "120px" },
-  { name: "ENGINEER NAME", uid: "engineerName", sortable: true, width: "120px" },
-  { name: "STATUS", uid: "status", sortable: true, width: "120px" },
-  { name: "ACTION", uid: "actions", sortable: true, width: "100px" },
-];
-const INITIAL_VISIBLE_COLUMNS = ["certificateNo", "customerName", "siteLocation", "makeModel", "range", "serialNo", "calibrationGas", "gasCanisterDetails", "dateOfCalibration", "calibrationDueDate", "engineerName", "actions"];
-
-const statusOptions = [
-  { name: "Checked", uid: "Checked" },
-  { name: "Unchecked", uid: "Unchecked" },
+  { name: "LOCATION", uid: "location", sortable: true, width: "120px" },
 ];
 
-export default function CertificateTable() {
-  const [certificates, setCertificates] = useState<Certificate[]>([]);
-  const [certificate, setCertificate] = useState<CertificateResponse | null>(null);
+export default function CustomerTable() {
+  const [customers, setCustomers] = useState<Customer[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [selectedKeys, setSelectedKeys] = React.useState<Set<string>>(new Set([]));
   const [visibleColumns, setVisibleColumns] = React.useState<Selection>(new Set(columns.map(column => column.uid)));
   const [statusFilter, setStatusFilter] = React.useState<Selection>(new Set([]));
-  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [rowsPerPage, setRowsPerPage] = useState(15);
   const [sortDescriptor, setSortDescriptor] = React.useState<SortDescriptor>({
     column: "certificateNo",
     direction: "ascending",
@@ -90,10 +60,10 @@ export default function CertificateTable() {
 
   const [isDownloading, setIsDownloading] = useState<string | null>(null);
 
-  const fetchCertificates = async () => {
+  const fetchCustomers = async () => {
     try {
       const response = await axios.get(
-        "http://localhost:5000/api/v1/certificates/getCertificate",
+        "http://localhost:5000/api/v1/customers/getCustomer",
         {
           headers: {
             "Content-Type": "application/json",
@@ -111,30 +81,30 @@ export default function CertificateTable() {
       });
 
       // Handle the response based on its structure
-      let certificatesData;
+      let customersData;
       if (typeof response.data === 'object' && 'data' in response.data) {
-        // Response format: { data: [...certificates] }
-        certificatesData = response.data.data;
+        // Response format: { data: [...customers] }
+        customersData = response.data.data;
       } else if (Array.isArray(response.data)) {
-        // Response format: [...certificates]
-        certificatesData = response.data;
+        // Response format: [...customers]
+        customersData = response.data;
       } else {
         console.error('Unexpected response format:', response.data);
         throw new Error('Invalid response format');
       }
 
-      // Ensure certificatesData is an array
-      if (!Array.isArray(certificatesData)) {
-        certificatesData = [];
+      // Ensure customersData is an array
+      if (!Array.isArray(customersData)) {
+        customersData = [];
       }
 
       // Map the data with safe key generation
-      const certificatesWithKeys = certificatesData.map((certificate: Certificate) => ({
-        ...certificate,
-        key: certificate._id || generateUniqueId()
+      const customersWithKeys = customersData.map((customer: Customer) => ({
+        ...customer,
+        key: customer._id || generateUniqueId()
       }));
 
-      setCertificates(certificatesWithKeys);
+      setCustomers(customersWithKeys);
       setError(null); // Clear any previous errors
     } catch (error) {
       console.error("Error fetching leads:", error);
@@ -143,12 +113,12 @@ export default function CertificateTable() {
       } else {
         setError("Failed to fetch leads.");
       }
-      setCertificates([]); // Set empty array on error
+      setCustomers([]); // Set empty array on error
     }
   };
 
   useEffect(() => {
-    fetchCertificates();
+    fetchCustomers();
   }, []);
 
   const [filterValue, setFilterValue] = useState("");
@@ -161,23 +131,17 @@ export default function CertificateTable() {
   }, [visibleColumns]);
 
   const filteredItems = React.useMemo(() => {
-    let filteredCertificates = [...certificates];
+    let filteredCustomers = [...customers];
 
     if (hasSearchFilter) {
-      filteredCertificates = filteredCertificates.filter((certificate) =>
-        certificate.customerName.toLowerCase().includes(filterValue.toLowerCase()) ||
-        certificate.certificateNo.toLowerCase().includes(filterValue.toLowerCase())
+      filteredCustomers = filteredCustomers.filter((customer) =>
+        customer.customerName.toLowerCase().includes(filterValue.toLowerCase()) ||
+        customer.Location.toLowerCase().includes(filterValue.toLowerCase())
       );
     }
 
-    if (statusFilter && statusFilter instanceof Set && statusFilter.size > 0) {
-      filteredCertificates = filteredCertificates.filter((certificate) =>
-        Array.from(statusFilter).includes(certificate.status)
-      );
-    }
-
-    return filteredCertificates;
-  }, [certificates, hasSearchFilter, filterValue, statusFilter]);
+    return filteredCustomers;
+  }, [customers, hasSearchFilter, filterValue]);
 
   const pages = Math.ceil(filteredItems.length / rowsPerPage);
 
@@ -190,86 +154,13 @@ export default function CertificateTable() {
 
   const sortedItems = React.useMemo(() => {
     return [...items].sort((a, b) => {
-      const first = a[sortDescriptor.column as keyof Certificate];
-      const second = b[sortDescriptor.column as keyof Certificate];
+      const first = a[sortDescriptor.column as keyof Customer];
+      const second = b[sortDescriptor.column as keyof Customer];
       const cmp = first < second ? -1 : first > second ? 1 : 0;
 
       return sortDescriptor.direction === "descending" ? -cmp : cmp;
     });
   }, [sortDescriptor, items]);
-
-  const [isEditOpen, setIsEditOpen] = useState(false);
-  const [selectedCertificate, setSelectedCertificate] = useState<Certificate | null>(null);
-
-  const [isSubmitting, setIsSubmitting] = useState(false)
-
-  const handleDownload = async (certificateId: string) => {
-    try {
-      setIsDownloading(certificateId);
-      console.log('Attempting to download certificate:', certificateId);
-
-      // Now download the PDF directly
-      const pdfResponse = await axios.get(
-        `http://localhost:5000/api/v1/certificates/download/${certificateId}`,
-        {
-          responseType: 'blob',
-          headers: {
-            "Authorization": `Bearer ${localStorage.getItem("token")}`,
-            "Accept": "application/pdf"
-          }
-        }
-      );
-
-      // Verify the content type
-      const contentType = pdfResponse.headers['content-type'];
-      if (!contentType || !contentType.includes('application/pdf')) {
-        throw new Error('Received invalid content type from server');
-      }
-
-      const blob = new Blob([pdfResponse.data], { type: 'application/pdf' });
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', `certificate-${certificateId}.pdf`);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
-
-      toast({
-        title: "Success",
-        description: "Certificate downloaded successfully",
-        variant: "default",
-      });
-    } catch (err) {
-      console.error('Download error:', err);
-      let errorMessage = "Failed to download certificate. Please try again.";
-
-      if (axios.isAxiosError(err)) {
-        console.error('Error details:', {
-          status: err.response?.status,
-          data: err.response?.data,
-          url: err.config?.url
-        });
-
-        if (err.response?.status === 401) {
-          errorMessage = "Please login again to download the certificate.";
-        } else if (err.response?.status === 404) {
-          errorMessage = "Certificate not found.";
-        } else if (!navigator.onLine) {
-          errorMessage = "No internet connection. Please check your network.";
-        }
-      }
-
-      toast({
-        title: "Error",
-        description: errorMessage,
-        variant: "destructive",
-      });
-    } finally {
-      setIsDownloading(null);
-    }
-  };
 
   const onNextPage = React.useCallback(() => {
     if (page < pages) {
@@ -319,29 +210,7 @@ export default function CertificateTable() {
 
         </div>
         <div className="flex justify-between items-center">
-          <span className="text-default-400 text-small">Total {certificates.length} certificates</span>
-          <Dropdown>
-            <DropdownTrigger className="hidden sm:flex">
-              <Button variant="outline" className="gap-2">
-                Status
-                <ChevronDownIcon className="text-small" />
-              </Button>
-            </DropdownTrigger>
-            <DropdownMenu
-              disallowEmptySelection
-              aria-label="Table Columns"
-              closeOnSelect={false}
-              selectedKeys={statusFilter}
-              selectionMode="multiple"
-              onSelectionChange={setStatusFilter}
-            >
-              {statusOptions.map((status) => (
-                <DropdownItem key={status.uid} className="capitalize">
-                  {status.name}
-                </DropdownItem>
-              ))}
-            </DropdownMenu>
-          </Dropdown>
+          <span className="text-default-400 text-small">Total {customers.length} customers</span>
           <label className="flex items-center text-default-400 text-small">
             Rows per page:
             <select
@@ -359,10 +228,9 @@ export default function CertificateTable() {
     );
   }, [
     filterValue,
-    statusFilter,
     visibleColumns,
     onRowsPerPageChange,
-    certificates.length,
+    customers.length,
     onSearchChange,
   ]);
 
@@ -413,7 +281,7 @@ export default function CertificateTable() {
 
   const handleSelectionChange = (keys: Selection) => {
     if (keys === "all") {
-      setSelectedKeys(new Set(certificates.map(cert => cert._id)));
+      setSelectedKeys(new Set(customers.map(customer => customer._id)));
     } else {
       setSelectedKeys(keys as Set<string>);
     }
@@ -423,34 +291,8 @@ export default function CertificateTable() {
     setVisibleColumns(keys);
   };
 
-  const renderCell = React.useCallback((certificate: Certificate, columnKey: string): React.ReactNode => {
-    const cellValue = certificate[columnKey];
-
-    if ((columnKey === "dateOfCalibration" || columnKey === "calibrationDueDate") && cellValue) {
-      return formatDate(cellValue);
-    }
-
-    if (columnKey === "actions") {
-      return (
-        <div className="relative flex items-center gap-2">
-          <Tooltip color="danger" content="Download Certificate">
-            <span
-              className="text-lg text-danger cursor-pointer active:opacity-50"
-              onClick={(e) => {
-                e.preventDefault();
-                handleDownload(certificate.certificateId);
-              }}
-            >
-              {isDownloading === certificate.certificateId ? (
-                <Loader2 className="h-6 w-6 animate-spin" />
-              ) : (
-                <FileDown className="h-6 w-6" />
-              )}
-            </span>
-          </Tooltip>
-        </div>
-      );
-    }
+  const renderCell = React.useCallback((customer: Customer, columnKey: string): React.ReactNode => {
+    const cellValue = customer[columnKey as keyof Customer];
 
     return cellValue;
   }, []);
@@ -488,10 +330,10 @@ export default function CertificateTable() {
             </TableColumn>
           )}
         </TableHeader>
-        <TableBody emptyContent={"No certificate found"} items={sortedItems}>
+        <TableBody emptyContent={"No customer found"} items={sortedItems}>
           {(item) => (
             <TableRow key={item._id}>
-              {(columnKey) => <TableCell style={{ fontSize: "12px", padding: "8px" }}>{renderCell(item as Certificate, columnKey as string)}</TableCell>}
+              {(columnKey) => <TableCell style={{ fontSize: "16px", padding: "8px" }}>{renderCell(item as Customer, columnKey as string)}</TableCell>}
             </TableRow>
           )}
         </TableBody>
