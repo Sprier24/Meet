@@ -1,28 +1,16 @@
 "use client";
 import React, { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
-import { CalendarIcon, Edit, Trash2, Loader2, PlusCircle, SearchIcon, ChevronDownIcon, Printer, FileDown } from "lucide-react"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { toast } from "@/hooks/use-toast"
-import { z } from "zod"
-import { cn } from "@/lib/utils"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
+import { SearchIcon } from "lucide-react"
 import { Input } from "@/components/ui/input"
-import { Table, TableBody, TableCell, TableColumn, TableHeader, TableRow, Selection } from "@heroui/react"
+import { Table, TableBody, TableCell, TableColumn, TableHeader, TableRow, Selection, Pagination } from "@heroui/react"
 import axios from "axios";
-import { format } from "date-fns"
-import { Chip, Dropdown, DropdownItem, DropdownMenu, DropdownTrigger, Pagination, Tooltip, User } from "@heroui/react"
-// import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useRouter } from "next/navigation";
-import { Calendar } from "@/components/ui/calendar"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface Customer {
   _id: string;
   customerName: string;
-  Location: string;
+  location: string;
 }
 
 type SortDescriptor = {
@@ -42,6 +30,7 @@ const formatDate = (dateString: string): string => {
 const columns = [
   { name: "CUSTOMER", uid: "customerName", sortable: true, width: "120px" },
   { name: "LOCATION", uid: "location", sortable: true, width: "120px" },
+  { name: "ACTION", uid: "actions", sortable: true, width: "100px" },
 ];
 
 export default function CustomerTable() {
@@ -136,7 +125,7 @@ export default function CustomerTable() {
     if (hasSearchFilter) {
       filteredCustomers = filteredCustomers.filter((customer) =>
         customer.customerName.toLowerCase().includes(filterValue.toLowerCase()) ||
-        customer.Location.toLowerCase().includes(filterValue.toLowerCase())
+        customer.location.toLowerCase().includes(filterValue.toLowerCase())
       );
     }
 
