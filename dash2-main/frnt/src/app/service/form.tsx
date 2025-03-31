@@ -21,7 +21,6 @@ interface ServiceRequest {
     place: string;
     placeOptions: string;
     natureOfJob: string;
-    reportNo: string;
     makeModelNumberoftheInstrumentQuantity: string;
     serialNumberoftheInstrumentCalibratedOK: string;
     serialNumberoftheFaultyNonWorkingInstruments: string;
@@ -36,8 +35,6 @@ interface ServiceResponse {
     downloadUrl: string;
 }
 
-
-
 export default function GenerateService() {
     const [formData, setFormData] = useState<ServiceRequest>({
         customerName: "",
@@ -49,7 +46,6 @@ export default function GenerateService() {
         place: "",
         placeOptions: "At Site", // Default value
         natureOfJob: "AMC",
-        reportNo: "",
         makeModelNumberoftheInstrumentQuantity: "",
         serialNumberoftheInstrumentCalibratedOK: "",
         serialNumberoftheFaultyNonWorkingInstruments: "",
@@ -95,13 +91,89 @@ export default function GenerateService() {
         setLoading(true);
         setError(null);
 
+        // Validate required fields
+        const requiredFields = {
+            customerName: "Customer Name",
+            customerLocation: "Customer Location",
+            contactPerson: "Contact Person",
+            contactNumber: "Contact Number",
+            serviceEngineer: "Service Engineer",
+            date: "Date",
+            place: "Place",
+            placeOptions: "Place Options",
+            natureOfJob: "Nature of Job",
+            makeModelNumberoftheInstrumentQuantity: "Make & Model Number",
+            serialNumberoftheInstrumentCalibratedOK: "Serial Number (Calibrated OK)",
+            serialNumberoftheFaultyNonWorkingInstruments: "Serial Number (Faulty/Non-Working)",
+            engineerName: "Engineer Name",
+            status: "Status"
+        };
+
+        // Check for empty required fields
+        const emptyFields = Object.entries(requiredFields)
+            .filter(([key]) => !formData[key as keyof ServiceRequest]?.toString().trim())
+            .map(([_, label]) => label);
+
+        if (emptyFields.length > 0) {
+            setError(`Please fill in the following required fields: ${emptyFields.join(", ")}`);
+            setLoading(false);
+            return;
+        }
+
+        // Validate engineer remarks
+        if (!formData.engineerRemarks.length) {
+            setError("At least one engineer remark is required");
+            setLoading(false);
+            return;
+        }
+
+        const hasInvalidRemarks = formData.engineerRemarks.some(remark => 
+            !remark.serviceSpares?.trim() ||
+            !remark.partNo?.trim() ||
+            !remark.rate?.trim() ||
+            !remark.quantity?.trim() ||
+            !remark.poNo?.trim() ||
+            isNaN(Number(remark.quantity))
+        );
+
+        if (hasInvalidRemarks) {
+            setError("Please fill in all engineer remarks fields correctly. Quantity must be a number.");
+            setLoading(false);
+            return;
+        }
+
         try {
+            console.log("Submitting form data:", formData);
             const response = await axios.post(
                 "http://localhost:5000/api/v1/services/generateService",
                 formData
             );
             setService(response.data);
+            
+            // Automatically trigger download if PDF was generated
+            if (response.data.downloadUrl) {
+                try {
+                    const pdfResponse = await axios.get(
+                        `http://localhost:5000${response.data.downloadUrl}`,
+                        { responseType: 'blob' }
+                    );
+                    console.log("PDF downloaded successfully");
+
+                    const url = window.URL.createObjectURL(new Blob([pdfResponse.data]));
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.setAttribute('download', `service-${response.data.serviceId}.pdf`);
+                    document.body.appendChild(link);
+                    link.click();
+                    link.remove();
+                    window.URL.revokeObjectURL(url);
+                } catch (downloadErr: any) {
+                    console.error("PDF download error:", downloadErr);
+                    setError("Service created but failed to download PDF. Please try downloading again.");
+                }
+            }
         } catch (err: any) {
+            console.error("Service generation error:", err);
             setError(err.response?.data?.error || "Failed to generate service. Please try again.");
         } finally {
             setLoading(false);
@@ -125,8 +197,9 @@ export default function GenerateService() {
             link.click();
             link.remove();
             window.URL.revokeObjectURL(url);
-        } catch (err) {
-            setError("Failed to download certificate. Please try again.");
+        } catch (error) {
+            console.error("Download error:", error);
+            setError("Failed to download PDF. Please try again.");
         }
     };
 
@@ -134,6 +207,16 @@ export default function GenerateService() {
         <div>
             {/* <h1 className="text-2xl font-bold mb-4">Generate Your Certificate</h1> */}
             <form onSubmit={handleSubmit} className="space-y-6">
+                {error && (
+                    <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+                        <span className="block sm:inline">{error}</span>
+                    </div>
+                )}
+                {loading && (
+                    <div className="bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded relative" role="alert">
+                        <span className="block sm:inline">Generating service...</span>
+                    </div>
+                )}
                 <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                     <input
                         type="text"
@@ -284,19 +367,11 @@ export default function GenerateService() {
                     </div>
                 </div>
                 <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                    <input
-                        type="text"
-                        name="reportNo"
-                        placeholder="Report Number"
-                        value={formData.reportNo}
-                        onChange={handleChange}
-                        className="p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
                     <select
                         name="engineerName"
                         value={formData.engineerName}
                         onChange={handleChange}
-                        className="p-2 border rounded"
+                        className="p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
                         <option value="">Select Engineer Name</option>
                         <option value="MR. Pintu Rathod">MR. Pintu Rathod</option>
@@ -436,8 +511,6 @@ export default function GenerateService() {
                     {loading ? "Generating..." : "Generate Service"}
                 </button>
             </form>
-
-            {/* {error && <p className="text-red-500 mt-4">{error}</p>} */}
 
             {service && (
                 <div className="mt-4 text-center">

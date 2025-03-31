@@ -2,6 +2,7 @@ const path = require("path");
 const fs = require("fs");
 const generatePDFService = require("../utils/serviceGenerator");
 const Service = require("../model/serviceModel");
+const { generateReportNumber } = require("../utils/reportNumberGenerator");
 
 exports.getServices = async (req, res) => {
     try {
@@ -15,7 +16,6 @@ exports.getServices = async (req, res) => {
 
 exports.createService = async (req, res) => {
     try {
-        console.log("Received request body:", req.body);
         const {
             customerName,
             customerLocation,
@@ -26,7 +26,6 @@ exports.createService = async (req, res) => {
             place,
             placeOptions,
             natureOfJob,
-            reportNo,
             makeModelNumberoftheInstrumentQuantity,
             serialNumberoftheInstrumentCalibratedOK,
             serialNumberoftheFaultyNonWorkingInstruments,
@@ -34,6 +33,9 @@ exports.createService = async (req, res) => {
             engineerName,
             status
         } = req.body;
+
+        // Generate automatic report number
+        const reportNo = generateReportNumber();
 
         // Validate required fields
         if (!customerName?.trim() ||
@@ -45,68 +47,56 @@ exports.createService = async (req, res) => {
             !place?.trim() ||
             !placeOptions?.trim() ||
             !natureOfJob?.trim() ||
-            !reportNo?.trim() ||
             !makeModelNumberoftheInstrumentQuantity?.trim() ||
             !serialNumberoftheInstrumentCalibratedOK?.trim() ||
             !serialNumberoftheFaultyNonWorkingInstruments?.trim() ||
             !engineerName?.trim() ||
             !status?.trim()
         ) {
-            console.error("Missing or empty required fields");
-            return res.status(400).json({ error: "All fields are required and cannot be empty" });
+            return res.status(400).json({ error: "All fields are required" });
         }
 
         // Validate engineer remarks
         if (!Array.isArray(engineerRemarks) || engineerRemarks.length === 0) {
-            console.error("Engineer remarks must be a non-empty array");
             return res.status(400).json({ error: "At least one engineer remark is required" });
         }
 
-        // Validate each engineer remark
-        const invalidRemarks = engineerRemarks.some(remark => {
-            return !remark.serviceSpares?.trim() ||
+        for (const remark of engineerRemarks) {
+            if (!remark.serviceSpares?.trim() ||
                 !remark.partNo?.trim() ||
                 !remark.rate?.trim() ||
-                !remark.quantity?.trim() || isNaN(Number(remark.quantity)) ||
-                !remark.poNo?.trim();
-        });
+                !remark.quantity?.trim() ||
+                !remark.poNo?.trim()
+            ) {
+                return res.status(400).json({ error: "All fields in engineer remarks are required" });
+            }
 
-        if (invalidRemarks) {
-            console.error("Invalid engineer remarks data");
-            return res.status(400).json({ error: "All engineer remarks fields must be filled correctly. Quantity must be a number." });
+            if (isNaN(Number(remark.quantity))) {
+                return res.status(400).json({ error: "Quantity must be a number" });
+            }
         }
 
-        const newService = new Service({
+        const service = new Service({
             customerName: customerName.trim(),
-            customerLocation:customerLocation.trim(),
+            customerLocation: customerLocation.trim(),
             contactPerson: contactPerson.trim(),
             contactNumber: contactNumber.trim(),
             serviceEngineer: serviceEngineer.trim(),
-            date,
+            date: date,
             place: place.trim(),
             placeOptions: placeOptions.trim(),
             natureOfJob: natureOfJob.trim(),
-            reportNo: reportNo.trim(),
+            reportNo: reportNo,
             makeModelNumberoftheInstrumentQuantity: makeModelNumberoftheInstrumentQuantity.trim(),
             serialNumberoftheInstrumentCalibratedOK: serialNumberoftheInstrumentCalibratedOK.trim(),
             serialNumberoftheFaultyNonWorkingInstruments: serialNumberoftheFaultyNonWorkingInstruments.trim(),
-            engineerRemarks: engineerRemarks.map(remark => ({
-                ...remark,
-                serviceSpares: remark.serviceSpares.trim(),
-                partNo: remark.partNo.trim(),
-                rate: remark.rate.trim(),
-                quantity: String(Number(remark.quantity)),
-                poNo: remark.poNo.trim()
-            })),
+            engineerRemarks: engineerRemarks,
             engineerName: engineerName.trim(),
             status: status.trim()
         });
 
-        console.log("Saving service to database...");
-        await newService.save();
-        console.log("Service saved successfully");
+        await service.save();
 
-        console.log("Generating PDF...");
         const pdfPath = await generatePDFService(
             customerName.trim(),
             customerLocation.trim(),
@@ -117,33 +107,24 @@ exports.createService = async (req, res) => {
             place.trim(),
             placeOptions.trim(),
             natureOfJob.trim(),
-            reportNo.trim(),
+            reportNo,
             makeModelNumberoftheInstrumentQuantity.trim(),
             serialNumberoftheInstrumentCalibratedOK.trim(),
             serialNumberoftheFaultyNonWorkingInstruments.trim(),
-            engineerRemarks.map(remark => ({
-                ...remark,
-                serviceSpares: remark.serviceSpares.trim(),
-                partNo: remark.partNo.trim(),
-                rate: remark.rate.trim(),
-                quantity: String(Number(remark.quantity)),
-                poNo: remark.poNo.trim()
-            })),
+            engineerRemarks,
             engineerName.trim(),
             status.trim(),
-            newService.serviceId
+            service._id
         );
-        console.log("PDF generated successfully at:", pdfPath);
 
         res.status(201).json({
-            message: "Service generated successfully!",
-            serviceId: newService.serviceId,
-            downloadUrl: `/api/v1/services/download/${newService.serviceId}`
+            message: "Service created successfully",
+            serviceId: service._id,
+            downloadUrl: `/api/v1/services/download/${service._id}`
         });
     } catch (error) {
-        console.error("Service generation error:", error);
-        console.error("Error stack:", error.stack);
-        res.status(500).json({ error: "Failed to generate service: " + error.message });
+        console.error("Error creating service:", error);
+        res.status(500).json({ error: "Failed to create service" });
     }
 };
 

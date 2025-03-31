@@ -47,15 +47,9 @@ const generatePDFService = async (
     // Logo
     const logoPath = path.join(process.cwd(), 'src', 'assets', 'rps.png');
     if (fs.existsSync(logoPath)) {
-        doc.image(logoPath, margin + 0, margin + 10, { width: 175, height: 50 });
+        doc.image(logoPath, margin + 0, { width: 175, height: 50 });
     }
 
-    const topMargin = 140;
-
-    const headPath = path.join(process.cwd(), 'src', 'assets', 'handf.png');
-    if (fs.existsSync(headPath)) {
-        doc.image(headPath, margin + 0, topMargin, { width: 526, height: 50 });
-    }
     const column1X = margin + 10;
     const column2X = 250;
     const startY = 180;
@@ -63,7 +57,7 @@ const generatePDFService = async (
     let y = startY;
 
     doc.moveDown(3);
-    doc.y = 200;
+    doc.y = 140;
     doc.fontSize(16)
         .fillColor('#1a237e')
         .text('SERVICE / CALIBRATION / INSTALLATION  JOBREPORT', { align: 'center', underline: true })
