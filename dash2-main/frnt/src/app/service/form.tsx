@@ -145,7 +145,7 @@ export default function GenerateService() {
         try {
             console.log("Submitting form data:", formData);
             const response = await axios.post(
-                "http://localhost:5000/api/v1/services/generateService",
+                "http://localhost:5000/api/v1/services/generateServices",
                 formData
             );
             setService(response.data);
@@ -419,12 +419,12 @@ export default function GenerateService() {
                     <thead>
                         <tr>
                             <th className="border p-2">#</th>
-                            <th className="border p-2">Gas</th>
-                            <th className="border p-2">Before Calibration</th>
-                            <th className="border p-2">After Calibration</th>
+                            <th className="border p-2">Service/Spares</th>
+                            <th className="border p-2">Part No.</th>
+                            <th className="border p-2">Rate</th>
+                            <th className="border p-2">Quantity</th>
+                            <th className="border p-2">PO No.</th>
                             <th className="border p-2">Remove</th>
-                            <th className="border p-2">Edit</th>
-                            <th className="border p-2">Save</th>
                         </tr>
                     </thead>
                     <tbody>

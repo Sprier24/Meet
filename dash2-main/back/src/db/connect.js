@@ -4,12 +4,8 @@ require('dotenv').config();
 const connectDB = async () => {
     try {
         const uri = process.env.MONGODB_URI || "mongodb+srv://Eons:abcd1234@cluster0.4hb7y4t.mongodb.net/certificateDB";
-        const options = {
-            useNewUrlParser: true,
-            useUnifiedTopology: true
-        };
-
-        await mongoose.connect(uri, options);
+        
+        await mongoose.connect(uri);
         console.log("Connected to DB");
     } catch (error) {
         console.error("MongoDB connection error:", error);

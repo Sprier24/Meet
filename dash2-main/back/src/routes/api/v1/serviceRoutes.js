@@ -9,7 +9,7 @@ router.get(
 );
 
 router.post(
-    "/generateService", 
+    "/generateServices", 
     ServiceController.createService
 );
 

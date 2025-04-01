@@ -10,24 +10,35 @@ const routes = require("./routes/api/v1/index");
 
 const app = express();
 
-// Ensure services directory exists
-const servicesDir = path.join(process.cwd(), "services");
-if (!fs.existsSync(servicesDir)) {
-    fs.mkdirSync(servicesDir);
-    console.log("Created services directory");
-}
-
 // Configure CORS to accept requests from any origin during development
-app.use(cors());
+app.use(cors({
+    origin: 'http://localhost:3000', // Allow frontend origin
+    credentials: true
+}));
 
 // Increase JSON payload limit for large requests
 app.use(bodyParser.json({ limit: '50mb' }));
 app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 
-connectDB();
+// Ensure services directory exists
+try {
+    const servicesDir = path.join(process.cwd(), "services");
+    if (!fs.existsSync(servicesDir)) {
+        fs.mkdirSync(servicesDir, { recursive: true });
+        console.log("Created services directory");
+    }
+} catch (error) {
+    console.error("Error creating services directory:", error);
+}
 
-app.use("/api/v1", routes);
+// Connect to database
+connectDB().then(() => {
+    app.use("/api/v1", routes);
 
-app.listen(5000, () => {
-    console.log(`Server running on port 5000`);
+    app.listen(5000, () => {
+        console.log(`Server running on port 5000`);
+    });
+}).catch(error => {
+    console.error("Failed to start server:", error);
+    process.exit(1);
 });

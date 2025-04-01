@@ -98,16 +98,16 @@ exports.createService = async (req, res) => {
         await service.save();
 
         const pdfPath = await generatePDFService(
+            reportNo,
+            date,
             customerName.trim(),
             customerLocation.trim(),
             contactPerson.trim(),
             contactNumber.trim(),
             serviceEngineer.trim(),
-            date,
             place.trim(),
             placeOptions.trim(),
             natureOfJob.trim(),
-            reportNo,
             makeModelNumberoftheInstrumentQuantity.trim(),
             serialNumberoftheInstrumentCalibratedOK.trim(),
             serialNumberoftheFaultyNonWorkingInstruments.trim(),
@@ -161,16 +161,16 @@ exports.downloadService = async (req, res) => {
             console.log("Attempting to regenerate PDF...");
             try {
                 await generatePDFService(
+                    service.reportNo,
+                    service.date,
                     service.customerName,
                     service.customerLocation,
                     service.contactPerson,
                     service.contactNumber,
                     service.serviceEngineer,
-                    service.date,
                     service.place,
                     service.placeOptions,
                     service.natureOfJob,
-                    service.reportNo,
                     service.makeModelNumberoftheInstrumentQuantity,
                     service.serialNumberoftheInstrumentCalibratedOK,
                     service.serialNumberoftheFaultyNonWorkingInstruments,
