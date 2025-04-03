@@ -50,7 +50,7 @@ function getNextSerialNumber() {
 function generateReportNumber() {
     const serialNumber = getNextSerialNumber();
     const financialYear = getCurrentFinancialYear();
-    return `SERV-${financialYear}-${String(serialNumber).padStart(4, '0')}`;
+    return `RSP/SERV/${financialYear}/${String(serialNumber).padStart(4, '0')}`;
 }
 
 module.exports = {

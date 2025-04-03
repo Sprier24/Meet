@@ -49,6 +49,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           },
         ],
       },
+
       {
         title: "Documentation",
         url: "#",
@@ -65,6 +66,21 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           {
             title: "Customer",
             url: "/customer",
+          },
+        ],
+      },
+      {
+        title: "Company Info",
+        url: "#",
+        icon: CirclePlay,
+        items: [
+          {
+            title: "Company Detail",
+            url: "/companyDetail",
+          },
+          {
+            title: "Contact Person",
+            url: "/contactPerson",
           },
         ],
       },

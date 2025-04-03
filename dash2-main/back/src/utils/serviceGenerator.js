@@ -111,7 +111,7 @@ const generatePDFService = async (
         doc.y = 100;
         doc.fontSize(16)
             .fillColor('#1a237e')
-            .text('SERVICE REPORT', { align: 'center', underline: true })
+            .text('SERVICE / CALIBRATION / INSTALLATION  JOB REPORT', { align: 'center', underline: true })
             .moveDown(2);
 
         // Add Service Fields in Two Columns
@@ -122,19 +122,46 @@ const generatePDFService = async (
             addRow('Customer Location', ":" + " " + (customerLocation || 'N/A'));
             addRow('Contact Person', ":" + " " + (contactPerson || 'N/A'));
             addRow('Contact Number', ":" + " " + (contactNumber || 'N/A'));
-            addRow('Service Engineer', ":" + " " + (serviceEngineer || 'N/A'));
-            addRow('Place', ":" + " " + (place || 'N/A'));
-            addRow('Place Options', ":" + " " + (placeOptions || 'N/A'));
-            addRow('Nature of Job', ":" + " " + (natureOfJob || 'N/A'));
-            addRow('Make & Model', ":" + " " + (makeModelNumberoftheInstrumentQuantity || 'N/A'));
-            addRow('Serial No. (Calibrated)', ":" + " " + (serialNumberoftheInstrumentCalibratedOK || 'N/A'));
-            addRow('Serial No. (Faulty)', ":" + " " + (serialNumberoftheFaultyNonWorkingInstruments || 'N/A'));
             addRow('Status', ":" + " " + (status || 'N/A'));
+            addRow('Service Engineer', ":" + " " + (serviceEngineer || 'N/A'));
+            addRow('Place Of Work', ":" + " " + (place || 'N/A'));
+            addRow('Place Options', ":" + " " + (placeOptions || 'N/A'));
+            addRow('Nature Of Job', ":" + " " + (natureOfJob || 'N/A'));
+            // addRow('Make & Model', ":" + " " + (makeModelNumberoftheInstrumentQuantity || 'N/A'), true);
+            // addRow('Serial No. (Calibrated)', ":" + " " + (serialNumberoftheInstrumentCalibratedOK || 'N/A'), true);
+            // addRow('Serial No. (Faulty)', ":" + " " + (serialNumberoftheFaultyNonWorkingInstruments || 'N/A'), true);
         } catch (error) {
             console.error('Error adding service fields:', error);
         }
 
-        doc.y = 490;
+        doc.y = 410
+        doc.font('Helvetica-Bold')
+            .fontSize(12)
+            .fillColor('#000')
+            .text('Make & Model Number: ', margin + 10, doc.y, { continued: true });
+        doc.font('Helvetica')
+            .text(makeModelNumberoftheInstrumentQuantity)
+            .moveDown(2);
+
+        // Calibrated & Tested OK
+        doc.font('Helvetica-Bold')
+            .fontSize(12)
+            .fillColor('#000')
+            .text('Calibrated & Tested OK: ', margin + 10, doc.y, { continued: true });
+        doc.font('Helvetica')
+            .text(serialNumberoftheInstrumentCalibratedOK)
+            .moveDown(2);
+
+        // Sr.No Faulty/Non-Working
+        doc.font('Helvetica-Bold')
+            .fontSize(12)
+            .fillColor('#000')
+            .text('Sr.No Faulty/Non-Working: ', margin + 10, doc.y, { continued: true });
+        doc.font('Helvetica')
+            .text(serialNumberoftheFaultyNonWorkingInstruments)
+            .moveDown(2);
+
+        doc.y = 800;
         doc.fontSize(10)
             .fillColor('#000')
             .text('ENGINEER REMARKS', { align: 'left', underline: true })
@@ -209,8 +236,15 @@ const generatePDFService = async (
             .moveDown(4);
 
         // Footer
-        doc.fontSize(8)
-            .text(`Generated on: ${new Date().toLocaleString()}`, margin + 10, doc.page.height - margin - 65);
+        doc.fontSize(12)
+            .text(`Generated on: ${new Date().toLocaleString()}`, margin + 10, doc.page.height - margin - 90);
+
+        const footerMargin = 60;
+
+        const footerPath = path.join(process.cwd(), 'src', 'assets', 'handf.png');
+        if (fs.existsSync(footerPath)) {
+            doc.image(footerPath, margin + 0, doc.page.height - footerMargin, { width: 570, height: 50 });
+        }
 
         doc.end();
         console.log('PDF generated successfully:', fileName);
