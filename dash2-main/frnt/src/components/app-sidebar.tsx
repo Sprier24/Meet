@@ -32,6 +32,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     () => [
       {
         title: "Dashboard",
+        url: "/dashboard",
+        icon: CirclePlay,
+        direct: true,
+      },
+      {
+        title: "Data Tables",
         url: "#",
         icon: CirclePlay,
         items: [
@@ -53,9 +59,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           },
         ],
       },
-
       {
-        title: "Documentation",
+        title: "Data Generators",
         url: "#",
         icon: File,
         items: [
@@ -66,11 +71,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           {
             title: "Service",
             url: "/service",
-          },
-          {
-            title: "Customer",
-            url: "/customer",
-          },
+          }
         ],
       },
       {
@@ -85,21 +86,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           {
             title: "Contact Person",
             url: "/contactPerson",
-          },
-        ],
-      },
-      {
-        title: "Settings",
-        url: "#",
-        icon: Settings,
-        items: [
-          {
-            title: "General",
-            url: "#",
-          },
-          {
-            title: "Team",
-            url: "#",
           },
         ],
       },
