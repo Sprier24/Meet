@@ -1,5 +1,5 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import GenerateCertificate from "../certificate/form"
+import { Metadata } from "next"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
     SidebarInset,
     SidebarProvider,
@@ -9,9 +9,16 @@ import { AppSidebar } from "@/components/app-sidebar"
 import { Separator } from "@/components/ui/separator"
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb"
 import { ModeToggle } from "@/components/ModeToggle"
-import GenerateCustomer from "./form"
+import CompanyTable from "./tablecs"
+import ContactPersonTable from "./tablecs"
 
-export default function CustomerPage() {
+
+export const metadata: Metadata = {
+    title: 'Company Table',
+    description: 'View and manage companies',
+}
+
+export default function CompanyTablePage() {
     return (
         <SidebarProvider>
             <AppSidebar />
@@ -30,7 +37,7 @@ export default function CustomerPage() {
                                 </BreadcrumbItem>
                                 <BreadcrumbSeparator className="hidden md:block" />
                                 <BreadcrumbItem>
-                                    <BreadcrumbPage>Customer</BreadcrumbPage>
+                                    <BreadcrumbPage>Contact Person</BreadcrumbPage>
                                 </BreadcrumbItem>
                             </BreadcrumbList>
                         </Breadcrumb>
@@ -39,19 +46,14 @@ export default function CustomerPage() {
                 <div className="container mx-auto py-10 px-4 sm:px-6 lg:px-8 pt-15">
                     <Card className="max-w-7xl mx-auto">
                         <CardHeader>
-                            <CardTitle className="text-3xl font-bold text-center">Customer</CardTitle>
-                            <CardDescription className="text-center">
-                                Please fill out the form below to generate a new Customer.
-                            </CardDescription>
+                            <CardTitle className="text-3xl font-bold text-center">Contact Person Table</CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <GenerateCustomer />
+                            <ContactPersonTable />
                         </CardContent>
                     </Card>
                 </div>
             </SidebarInset>
         </SidebarProvider>
-
-
     )
 }

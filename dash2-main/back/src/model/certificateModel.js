@@ -31,7 +31,7 @@ const certificateSchema = new mongoose.Schema({
     calibrationDueDate: { type: Date, required: true },
     observations: { type: [observationSchema] }, 
     engineerName: { type: String, required: true },
-    status: { type: String, required: true, default: "checked" }
+    // status: { type: String, required: true, default: "checked" }
 }, {
     timestamps: true
 });

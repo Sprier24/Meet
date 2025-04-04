@@ -5,12 +5,16 @@ import { SearchIcon } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableColumn, TableHeader, TableRow, Selection, Pagination } from "@heroui/react"
 import axios from "axios";
-import { useRouter } from "next/navigation";
 
-interface Customer {
+interface Company {
   _id: string;
-  customerName: string;
-  location: string;
+  companyName: string;
+  address: string;
+  gstNumber: string;
+  industries: string;
+  website: string;
+  industriesType: string;
+  flag: string;
 }
 
 type SortDescriptor = {
@@ -18,41 +22,43 @@ type SortDescriptor = {
   direction: 'ascending' | 'descending';
 }
 
+
 const generateUniqueId = () => {
   return Math.random().toString(36).substring(2) + Date.now().toString(36);
 };
 
-const formatDate = (dateString: string): string => {
-  const date = new Date(dateString);
-  return date.toISOString().split("T")[0]; // Returns "YYYY-MM-DD"
-};
-
 const columns = [
-  { name: "CUSTOMER", uid: "customerName", sortable: true, width: "120px" },
-  { name: "LOCATION", uid: "location", sortable: true, width: "120px" },
-  { name: "ACTION", uid: "actions", sortable: true, width: "100px" },
-];
+  { name: "COMPANY NAME", uid: "companyName", sortable: true, width: "120px" },
+  { name: "ADDRESS", uid: "address", sortable: true, width: "120px" },
+  { name: "GST NUMBER", uid: "gstNumber", sortable: true, width: "120px" },
+  { name: "INDUSTRIES", uid: "industries", sortable: true, width: "120px" },
+  { name: "WEBSITE", uid: "website", sortable: true, width: "120px" },
+  { name: "INDUSTRIES TYPE", uid: "industriesType", sortable: true, width: "120px" },
+  { name: "FLAG", uid: "flag", sortable: true, width: "120px" },
 
-export default function CustomerTable() {
-  const [customers, setCustomers] = useState<Customer[]>([]);
+];
+const INITIAL_VISIBLE_COLUMNS = ["companyName", "address", "gstNumber", "industries", "website", "industriesType", "flag"];
+
+export default function CompanyTable() {
+  const [companies, setCompanies] = useState<Company[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [selectedKeys, setSelectedKeys] = React.useState<Set<string>>(new Set([]));
   const [visibleColumns, setVisibleColumns] = React.useState<Selection>(new Set(columns.map(column => column.uid)));
   const [statusFilter, setStatusFilter] = React.useState<Selection>(new Set([]));
-  const [rowsPerPage, setRowsPerPage] = useState(15);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
   const [sortDescriptor, setSortDescriptor] = React.useState<SortDescriptor>({
-    column: "certificateNo",
+    column: "companyName",
     direction: "ascending",
   });
+
   const [page, setPage] = React.useState(1);
-  const router = useRouter();
 
   const [isDownloading, setIsDownloading] = useState<string | null>(null);
 
-  const fetchCustomers = async () => {
+  const fetchCompanies = async () => {
     try {
       const response = await axios.get(
-        "http://localhost:5000/api/v1/customers/getCustomer",
+        "http://localhost:5000/api/v1/companies/getCompany",
         {
           headers: {
             "Content-Type": "application/json",
@@ -61,7 +67,6 @@ export default function CustomerTable() {
         }
       );
 
-      // Log the response structure
       console.log('Full API Response:', {
         status: response.status,
         data: response.data,
@@ -69,32 +74,27 @@ export default function CustomerTable() {
         hasData: 'data' in response.data
       });
 
-      // Handle the response based on its structure
-      let customersData;
+      let certificatesData;
       if (typeof response.data === 'object' && 'data' in response.data) {
-        // Response format: { data: [...customers] }
-        customersData = response.data.data;
+        certificatesData = response.data.data;
       } else if (Array.isArray(response.data)) {
-        // Response format: [...customers]
-        customersData = response.data;
+        certificatesData = response.data;
       } else {
         console.error('Unexpected response format:', response.data);
         throw new Error('Invalid response format');
       }
 
-      // Ensure customersData is an array
-      if (!Array.isArray(customersData)) {
-        customersData = [];
+      if (!Array.isArray(certificatesData)) {
+        certificatesData = [];
       }
 
-      // Map the data with safe key generation
-      const customersWithKeys = customersData.map((customer: Customer) => ({
-        ...customer,
-        key: customer._id || generateUniqueId()
+      const certificatesWithKeys = certificatesData.map((certificate: Company) => ({
+        ...certificate,
+        key: certificate._id || generateUniqueId()
       }));
 
-      setCustomers(customersWithKeys);
-      setError(null); // Clear any previous errors
+      setCompanies(certificatesWithKeys);
+      setError(null);
     } catch (error) {
       console.error("Error fetching leads:", error);
       if (axios.isAxiosError(error)) {
@@ -102,12 +102,12 @@ export default function CustomerTable() {
       } else {
         setError("Failed to fetch leads.");
       }
-      setCustomers([]); // Set empty array on error
+      setCompanies([]);
     }
   };
 
   useEffect(() => {
-    fetchCustomers();
+    fetchCompanies();
   }, []);
 
   const [filterValue, setFilterValue] = useState("");
@@ -120,17 +120,17 @@ export default function CustomerTable() {
   }, [visibleColumns]);
 
   const filteredItems = React.useMemo(() => {
-    let filteredCustomers = [...customers];
+    let filteredCompanies = [...companies];
 
     if (hasSearchFilter) {
-      filteredCustomers = filteredCustomers.filter((customer) =>
-        customer.customerName.toLowerCase().includes(filterValue.toLowerCase()) ||
-        customer.location.toLowerCase().includes(filterValue.toLowerCase())
+      filteredCompanies = filteredCompanies.filter((company) =>
+        company.companyName.toLowerCase().includes(filterValue.toLowerCase()) ||
+        company.address.toLowerCase().includes(filterValue.toLowerCase())
       );
     }
 
-    return filteredCustomers;
-  }, [customers, hasSearchFilter, filterValue]);
+    return filteredCompanies;
+  }, [companies, hasSearchFilter, filterValue]);
 
   const pages = Math.ceil(filteredItems.length / rowsPerPage);
 
@@ -143,8 +143,8 @@ export default function CustomerTable() {
 
   const sortedItems = React.useMemo(() => {
     return [...items].sort((a, b) => {
-      const first = a[sortDescriptor.column as keyof Customer];
-      const second = b[sortDescriptor.column as keyof Customer];
+      const first = a[sortDescriptor.column as keyof Company];
+      const second = b[sortDescriptor.column as keyof Company];
       const cmp = first < second ? -1 : first > second ? 1 : 0;
 
       return sortDescriptor.direction === "descending" ? -cmp : cmp;
@@ -188,7 +188,7 @@ export default function CustomerTable() {
         <div className="flex justify-between gap-3 items-end">
           <Input
             isClearable
-            className="w-full sm:max-w-[80%]" // Full width on small screens, 44% on larger screens
+            className="w-full sm:max-w-[80%]"
             placeholder="Search by name..."
             startContent={<SearchIcon className="h-4 w-10 text-muted-foreground" />}
             value={filterValue}
@@ -199,7 +199,7 @@ export default function CustomerTable() {
 
         </div>
         <div className="flex justify-between items-center">
-          <span className="text-default-400 text-small">Total {customers.length} customers</span>
+          <span className="text-default-400 text-small">Total {companies.length} companies</span>
           <label className="flex items-center text-default-400 text-small">
             Rows per page:
             <select
@@ -217,9 +217,10 @@ export default function CustomerTable() {
     );
   }, [
     filterValue,
+    statusFilter,
     visibleColumns,
     onRowsPerPageChange,
-    customers.length,
+    companies.length,
     onSearchChange,
   ]);
 
@@ -231,14 +232,12 @@ export default function CustomerTable() {
         </span>
         <Pagination
           isCompact
-          // showControls
           showShadow
           color="success"
           page={page}
           total={pages}
           onChange={setPage}
           classNames={{
-            // base: "gap-2 rounded-2xl shadow-lg p-2 dark:bg-default-100",
             cursor: "bg-[hsl(339.92deg_91.04%_52.35%)] shadow-md",
             item: "data-[active=true]:bg-[hsl(339.92deg_91.04%_52.35%)] data-[active=true]:text-white rounded-lg",
           }}
@@ -249,7 +248,7 @@ export default function CustomerTable() {
             className="bg-[hsl(339.92deg_91.04%_52.35%)]"
             variant="default"
             size="sm"
-            disabled={pages === 1} // Use the `disabled` prop
+            disabled={pages === 1}
             onClick={onPreviousPage}
           >
             Previous
@@ -258,11 +257,11 @@ export default function CustomerTable() {
             className="bg-[hsl(339.92deg_91.04%_52.35%)]"
             variant="default"
             size="sm"
-            onClick={onNextPage} // Use `onClick` instead of `onPress`
+            onClick={onNextPage}
+            disabled={pages === 1}
           >
             Next
           </Button>
-
         </div>
       </div>
     );
@@ -270,7 +269,7 @@ export default function CustomerTable() {
 
   const handleSelectionChange = (keys: Selection) => {
     if (keys === "all") {
-      setSelectedKeys(new Set(customers.map(customer => customer._id)));
+      setSelectedKeys(new Set(companies.map(company => company._id)));
     } else {
       setSelectedKeys(keys as Set<string>);
     }
@@ -280,8 +279,8 @@ export default function CustomerTable() {
     setVisibleColumns(keys);
   };
 
-  const renderCell = React.useCallback((customer: Customer, columnKey: string): React.ReactNode => {
-    const cellValue = customer[columnKey as keyof Customer];
+  const renderCell = React.useCallback((company: Company, columnKey: keyof Company): React.ReactNode => {
+    const cellValue = company[columnKey];
 
     return cellValue;
   }, []);
@@ -319,16 +318,14 @@ export default function CustomerTable() {
             </TableColumn>
           )}
         </TableHeader>
-        <TableBody emptyContent={"No customer found"} items={sortedItems}>
+        <TableBody emptyContent={"No certificate found"} items={sortedItems}>
           {(item) => (
             <TableRow key={item._id}>
-              {(columnKey) => <TableCell style={{ fontSize: "16px", padding: "8px" }}>{renderCell(item as Customer, columnKey as string)}</TableCell>}
+              {(columnKey) => <TableCell style={{ fontSize: "12px", padding: "8px" }}>{renderCell(item as Company, columnKey as keyof Company)}</TableCell>}
             </TableRow>
           )}
         </TableBody>
       </Table>
-
     </div>
-
   );
 }

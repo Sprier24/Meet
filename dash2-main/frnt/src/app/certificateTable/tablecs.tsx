@@ -1,24 +1,11 @@
 "use client";
 import React, { useEffect, useState } from "react"
-import { Button } from "@/components/ui/button"
-import { CalendarIcon, Edit, Trash2, Loader2, PlusCircle, SearchIcon, ChevronDownIcon, Printer, FileDown } from "lucide-react"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { toast } from "@/hooks/use-toast"
-import { z } from "zod"
-import { cn } from "@/lib/utils"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import { Table, TableBody, TableCell, TableColumn, TableHeader, TableRow, Selection } from "@heroui/react"
+import { Table, TableBody, TableCell, TableColumn, TableHeader, TableRow, Selection, toast, Button } from "@heroui/react"
 import axios from "axios";
-import { format } from "date-fns"
-import { Chip, Dropdown, DropdownItem, DropdownMenu, DropdownTrigger, Pagination, Tooltip, User } from "@heroui/react"
-// import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dropdown, DropdownItem, DropdownMenu, DropdownTrigger, Pagination, Tooltip } from "@heroui/react"
 import { useRouter } from "next/navigation";
-import { Calendar } from "@/components/ui/calendar"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-
+import { ChevronDownIcon, FileDown, Loader2, SearchIcon } from "lucide-react";
 interface Certificate {
   _id: string;
   certificateNo: string;
@@ -32,7 +19,7 @@ interface Certificate {
   dateOfCalibration: string;
   calibrationDueDate: string;
   engineerName: string;
-  status: string;
+  // status: string;
   [key: string]: string;
 }
 
@@ -63,7 +50,7 @@ const columns = [
   { name: "MAKE MODEL", uid: "makeModel", sortable: true, width: "120px" },
   { name: "SERIAL NO", uid: "serialNo", sortable: true, width: "120px" },
   { name: "ENGINEER NAME", uid: "engineerName", sortable: true, width: "120px" },
-  { name: "STATUS", uid: "status", sortable: true, width: "120px" },
+  // { name: "STATUS", uid: "status", sortable: true, width: "120px" },
   { name: "ACTION", uid: "actions", sortable: true, width: "100px" },
 ];
 const INITIAL_VISIBLE_COLUMNS = ["certificateNo", "customerName", "siteLocation", "makeModel", "range", "serialNo", "calibrationGas", "gasCanisterDetails", "dateOfCalibration", "calibrationDueDate", "engineerName", "actions"];
@@ -102,7 +89,6 @@ export default function CertificateTable() {
         }
       );
 
-      // Log the response structure
       console.log('Full API Response:', {
         status: response.status,
         data: response.data,
@@ -110,32 +96,26 @@ export default function CertificateTable() {
         hasData: 'data' in response.data
       });
 
-      // Handle the response based on its structure
       let certificatesData;
       if (typeof response.data === 'object' && 'data' in response.data) {
-        // Response format: { data: [...certificates] }
         certificatesData = response.data.data;
       } else if (Array.isArray(response.data)) {
-        // Response format: [...certificates]
         certificatesData = response.data;
       } else {
         console.error('Unexpected response format:', response.data);
         throw new Error('Invalid response format');
       }
 
-      // Ensure certificatesData is an array
       if (!Array.isArray(certificatesData)) {
         certificatesData = [];
       }
-
-      // Map the data with safe key generation
       const certificatesWithKeys = certificatesData.map((certificate: Certificate) => ({
         ...certificate,
         key: certificate._id || generateUniqueId()
       }));
 
       setCertificates(certificatesWithKeys);
-      setError(null); // Clear any previous errors
+      setError(null);
     } catch (error) {
       console.error("Error fetching leads:", error);
       if (axios.isAxiosError(error)) {
@@ -143,7 +123,7 @@ export default function CertificateTable() {
       } else {
         setError("Failed to fetch leads.");
       }
-      setCertificates([]); // Set empty array on error
+      setCertificates([]);
     }
   };
 
@@ -208,7 +188,6 @@ export default function CertificateTable() {
       setIsDownloading(certificateId);
       console.log('Attempting to download certificate:', certificateId);
 
-      // Now download the PDF directly
       const pdfResponse = await axios.get(
         `http://localhost:5000/api/v1/certificates/download/${certificateId}`,
         {
@@ -220,7 +199,6 @@ export default function CertificateTable() {
         }
       );
 
-      // Verify the content type
       const contentType = pdfResponse.headers['content-type'];
       if (!contentType || !contentType.includes('application/pdf')) {
         throw new Error('Received invalid content type from server');
@@ -308,7 +286,7 @@ export default function CertificateTable() {
         <div className="flex justify-between gap-3 items-end">
           <Input
             isClearable
-            className="w-full sm:max-w-[80%]" // Full width on small screens, 44% on larger screens
+            className="w-full sm:max-w-[80%]" 
             placeholder="Search by name..."
             startContent={<SearchIcon className="h-4 w-10 text-muted-foreground" />}
             value={filterValue}
@@ -374,14 +352,12 @@ export default function CertificateTable() {
         </span>
         <Pagination
           isCompact
-          // showControls
           showShadow
           color="success"
           page={page}
           total={pages}
           onChange={setPage}
           classNames={{
-            // base: "gap-2 rounded-2xl shadow-lg p-2 dark:bg-default-100",
             cursor: "bg-[hsl(339.92deg_91.04%_52.35%)] shadow-md",
             item: "data-[active=true]:bg-[hsl(339.92deg_91.04%_52.35%)] data-[active=true]:text-white rounded-lg",
           }}
@@ -392,7 +368,7 @@ export default function CertificateTable() {
             className="bg-[hsl(339.92deg_91.04%_52.35%)]"
             variant="default"
             size="sm"
-            disabled={pages === 1} // Use the `disabled` prop
+            disabled={pages === 1} 
             onClick={onPreviousPage}
           >
             Previous
@@ -401,7 +377,7 @@ export default function CertificateTable() {
             className="bg-[hsl(339.92deg_91.04%_52.35%)]"
             variant="default"
             size="sm"
-            onClick={onNextPage} // Use `onClick` instead of `onPress`
+            onClick={onNextPage} 
           >
             Next
           </Button>

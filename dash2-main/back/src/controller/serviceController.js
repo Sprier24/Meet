@@ -31,7 +31,7 @@ exports.createService = async (req, res) => {
             serialNumberoftheFaultyNonWorkingInstruments,
             engineerRemarks,
             engineerName,
-            status
+            // status
         } = req.body;
 
         // Generate automatic report number
@@ -50,8 +50,8 @@ exports.createService = async (req, res) => {
             !makeModelNumberoftheInstrumentQuantity?.trim() ||
             !serialNumberoftheInstrumentCalibratedOK?.trim() ||
             !serialNumberoftheFaultyNonWorkingInstruments?.trim() ||
-            !engineerName?.trim() ||
-            !status?.trim()
+            !engineerName?.trim() 
+            // !status?.trim()
         ) {
             return res.status(400).json({ error: "All fields are required" });
         }
@@ -92,7 +92,7 @@ exports.createService = async (req, res) => {
             serialNumberoftheFaultyNonWorkingInstruments: serialNumberoftheFaultyNonWorkingInstruments.trim(),
             engineerRemarks: engineerRemarks,
             engineerName: engineerName.trim(),
-            status: status.trim()
+            // status: status.trim()
         });
 
         await service.save();
@@ -113,7 +113,7 @@ exports.createService = async (req, res) => {
             serialNumberoftheFaultyNonWorkingInstruments.trim(),
             engineerRemarks,
             engineerName.trim(),
-            status.trim(),
+            // status.trim(),
             service._id
         );
 
@@ -134,13 +134,10 @@ exports.downloadService = async (req, res) => {
         const { serviceId } = req.params;
 
         let service;
-        // Check if the ID matches MongoDB ObjectId pattern (24 hex characters)
         if (/^[0-9a-fA-F]{24}$/.test(serviceId)) {
-            // Try to find service by MongoDB _id first
             service = await Service.findById(serviceId);
         }
 
-        // If not found by _id or if serviceId wasn't a MongoDB ID, try finding by serviceId field
         if (!service) {
             service = await Service.findOne({ serviceId: serviceId });
         }
@@ -150,14 +147,12 @@ exports.downloadService = async (req, res) => {
             return res.status(404).json({ error: "Service not found in database" });
         }
 
-        // Use the service's custom serviceId for the PDF filename
         const pdfPath = path.join(process.cwd(), "services", `${service.serviceId}.pdf`);
         console.log("Looking for PDF at path:", pdfPath);
 
         if (!fs.existsSync(pdfPath)) {
             console.error(`Service file not found at path: ${pdfPath}`);
 
-            // Try to regenerate the PDF
             console.log("Attempting to regenerate PDF...");
             try {
                 await generatePDFService(
@@ -176,7 +171,7 @@ exports.downloadService = async (req, res) => {
                     service.serialNumberoftheFaultyNonWorkingInstruments,
                     service.engineerRemarks,
                     service.engineerName,
-                    service.status,
+                    // service.status,
                     service.serviceId
                 );
                 console.log("PDF regenerated successfully");
@@ -185,7 +180,6 @@ exports.downloadService = async (req, res) => {
                 return res.status(500).json({ error: "Failed to regenerate service PDF" });
             }
 
-            // Check again if the file exists after regeneration
             if (!fs.existsSync(pdfPath)) {
                 return res.status(404).json({ error: "Service file could not be generated" });
             }

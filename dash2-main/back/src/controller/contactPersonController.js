@@ -1,11 +1,12 @@
-const Customer = require("../model/customerModel");
+const ContactPerson = require("../model/ContactPersonModel");
 
-const getCustomer = async (req, res) => {
+
+const getContactPerson = async (req, res) => {
     try {
-        const customer = await Customer.find({})
+        const contactPerson = await ContactPerson.find({})
         res.status(200).json({
             success: true,
-            data: customer
+            data: contactPerson
         })
     } catch (error) {
         console.error("Error fetching Customers:", error);
@@ -16,7 +17,7 @@ const getCustomer = async (req, res) => {
     }
 }
 
-const createCustomer = async (req, res) => {
+const createContactPerson = async (req, res) => {
     try {
         console.log("Received request body:", req.body);
         const {
@@ -49,6 +50,6 @@ const createCustomer = async (req, res) => {
 };
 
 module.exports = {
-    getCustomer,
-    createCustomer
+    getContactPerson,
+    createContactPerson
 }

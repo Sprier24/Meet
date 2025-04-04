@@ -22,7 +22,7 @@ interface CertificateRequest {
   calibrationDueDate: Date,
   observations: Observation[],
   engineerName: String,
-  status: string
+  // status: string
 }
 
 interface CertificateResponse {
@@ -61,7 +61,7 @@ export default function GenerateCertificate() {
     calibrationDueDate: new Date().toISOString().split('T')[0],
     observations: [{ gas: "", before: "", after: "" }],
     engineerName: "",
-    status: ""
+    // status: ""
   });
   const [certificate, setCertificate] = useState<CertificateResponse | null>(null);
   const [loading, setLoading] = useState(false);
@@ -223,7 +223,6 @@ export default function GenerateCertificate() {
     console.log('Form data before submission:', formData);
 
     try {
-      // Ensure dates are properly formatted
       const submissionData = {
         ...formData,
         dateOfCalibration: startDate ? new Date(startDate) : null,
@@ -269,7 +268,6 @@ export default function GenerateCertificate() {
 
   return (
     <div>
-      {/* <h1 className="text-2xl font-bold mb-4">Generate Your Certificate</h1> */}
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
           <input
@@ -408,7 +406,7 @@ export default function GenerateCertificate() {
             <option value="MR. Vivek">MR. Vivek</option>
           </select>
         </div>
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+        {/* <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
           <select
             name="status"
             value={formData.status}
@@ -419,7 +417,7 @@ export default function GenerateCertificate() {
             <option value="Checked">Checked</option>
             <option value="Unchecked">Unchecked</option>
           </select>
-        </div>
+        </div> */}
 
         <h2 className="text-lg font-bold mt-4">Observation Table</h2>
         <div className="flex justify-end mb-4">

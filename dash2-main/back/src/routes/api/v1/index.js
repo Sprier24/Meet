@@ -4,14 +4,15 @@ const router = express.Router();
 
 const certificateRoutes = require("./certificateRoutes");
 const serviceRoutes = require("./serviceRoutes");
-const customerRoutes = require("./customerRoutes");
 const companyRoutes = require("./companyRoutes");
+const contactPersonRoutes = require("./contactPersonRoutes");
 
 router.use("/certificates", certificateRoutes);
 router.use("/services", serviceRoutes);
-router.use("/customers", customerRoutes);
 router.use("/companies", companyRoutes);
+router.use("/contactPersons", contactPersonRoutes);
 
 module.exports = router;
+
 
 

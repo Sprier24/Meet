@@ -4,24 +4,22 @@ import { useState } from "react";
 import axios from "axios";
 
 interface CompanyRequest {
-    companyName: string;
-    address: string;
-    gstNumber: string;
-    industries: string;
-    website: string;
-    industriesType: string;
-    flag: string;
+    firstName: string;
+    middleName: string;
+    lastName: string;
+    contactNo: string;
+    email: string;
+    designation: string;
 }
 
-export default function CompanyForm() {
+export default function ContactPersonForm() {
     const [formData, setFormData] = useState<CompanyRequest>({
-        companyName: "",
-        address: "",
-        gstNumber: "",
-        industries: "",
-        website: "",
-        industriesType: "",
-        flag: ""
+        firstName: "",
+        middleName: "",
+        lastName: "",
+        contactNo: "",
+        email: "",
+        designation: ""
     });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -41,17 +39,16 @@ export default function CompanyForm() {
 
         try {
             await axios.post(
-                "http://localhost:5000/api/v1/companies/generateCompany",
+                "http://localhost:5000/api/v1/contactPersons/generateContactPerson",
                 formData
             );
             setFormData({
-                companyName: "",
-                address: "",
-                gstNumber: "",
-                industries: "",
-                website: "",
-                industriesType: "",
-                flag: ""
+                firstName: "",
+                middleName: "",
+                lastName: "",
+                contactNo: "",
+                email: "",
+                designation: ""
             });
         } catch (err: any) {
             console.error('Error submitting form:', err);
@@ -67,17 +64,17 @@ export default function CompanyForm() {
                 <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                     <input
                         type="text"
-                        name="companyName"
-                        placeholder="Enter Company Name"
-                        value={formData.companyName}
+                        name="firstName"
+                        placeholder="Enter First Name"
+                        value={formData.firstName}
                         onChange={handleChange}
                         className="p-2 border rounded"
                     />
                     <input
                         type="text"
-                        name="address"
-                        placeholder="Enter Address"
-                        value={formData.address}
+                        name="middleName"
+                        placeholder="Enter Middle Name"
+                        value={formData.middleName}
                         onChange={handleChange}
                         className="p-2 border rounded"
                     />
@@ -85,17 +82,17 @@ export default function CompanyForm() {
                 <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                     <input
                         type="text"
-                        name="gstNumber"
-                        placeholder="Enter GST Number"
-                        value={formData.gstNumber}
+                        name="lastName"
+                        placeholder="Enter Last Name"
+                        value={formData.lastName}
                         onChange={handleChange}
                         className="p-2 border rounded"
                     />
                     <input
                         type="text"
-                        name="industries"
-                        placeholder="Enter Industries"
-                        value={formData.industries}
+                        name="contactNo"
+                        placeholder="Enter Contact Number"
+                        value={formData.contactNo}
                         onChange={handleChange}
                         className="p-2 border rounded"
                     />
@@ -104,42 +101,29 @@ export default function CompanyForm() {
                 <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                     <input
                         type="text"
-                        name="website"
-                        placeholder="Enter Website"
-                        value={formData.website}
+                        name="email"
+                        placeholder="Enter Email"
+                        value={formData.email}
                         onChange={handleChange}
                         className="p-2 border rounded"
                     />
                     <input
                         type="text"
-                        name="industriesType"
-                        placeholder="Enter Industries Type"
-                        value={formData.industriesType}
+                        name="designation"
+                        placeholder="Enter Designation"
+                        value={formData.designation}
                         onChange={handleChange}
                         className="p-2 border rounded"
                     />
                 </div>
 
-                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                    <select
-                        name="flag"
-                        value={formData.flag}
-                        onChange={handleChange}
-                        className="p-2 border rounded"
-                    >
-                        <option value="">Select Flag</option>
-                        <option value="red">Red</option>
-                        <option value="yellow">Yellow</option>
-                        <option value="green">Green</option>
-                    </select>
-                </div>
 
                 <button
                     type="submit"
                     className="bg-blue-950 hover:bg-blue-900 text-white p-2 rounded-md"
                     disabled={loading}
                 >
-                    {loading ? "Submitting..." : "Submit Company Detail"}
+                    {loading ? "Submitting..." : "Submit Contact Person Detail"}
                 </button>
             </form>
 

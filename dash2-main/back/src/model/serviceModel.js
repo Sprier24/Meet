@@ -30,7 +30,7 @@ const serviceSchema = new mongoose.Schema({
     serialNumberoftheFaultyNonWorkingInstruments: { type: String, required: true },
     engineerRemarks: { type: [engineerRemarksSchema], required: true }, // Now storing multiple observations
     engineerName: { type: String, required: true },
-    status: { type: String, required: true, default: "checked" }
+    // status: { type: String, required: true, default: "checked" }
 }, {
     timestamps: true
 });
